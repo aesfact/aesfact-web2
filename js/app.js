@@ -237,29 +237,96 @@ window.moveSlide = (sid, dir) => {
 
 // --- ADMINISTRACIÓN ---
 
-const AUTHS = [{u:'SysAdmin',p:'AESFAC_2026'},{u:'Ryzen8',p:'Radeon2025'}];
+
+
+// --- ADMINISTRACIÓN SEGURA (NUEVO) ---
 
 function initAdmin() {
-    document.getElementById('login-btn')?.addEventListener('click', () => {
-        const u = document.getElementById('admin-email').value.trim();
-        const p = document.getElementById('admin-pass').value.trim();
-        if(AUTHS.some(x=>x.u===u && x.p===p)) {
-            sessionStorage.setItem('aesfact_session', 'active');
-            toggleAdmin(true); 
-            loadAdminData(); 
-            loadAdminLists();
-            initMaintenanceControl(); 
-        } else alert('Credenciales incorrectas');
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    // 1. Verificar si ya hay una sesión activa en Supabase al cargar la página
+    verificarSesionActiva();
+
+    // 2. Lógica de Login
+    loginBtn?.addEventListener('click', async () => {
+        const email = document.getElementById('admin-email').value.trim();
+        const password = document.getElementById('admin-pass').value.trim();
+        
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Verificando...';
+
+        // Intentar iniciar sesión con Supabase Auth
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
+            password: password,
+        });
+
+        if (error) {
+            alert('Error de acceso: Credenciales incorrectas.');
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Entrar';
+            return;
+        }
+
+        // Si el login es exitoso, buscar su ROL en la base de datos
+        const { data: roleData, error: roleError } = await supabase
+            .from('admin_roles')
+            .select('role')
+            .eq('id', data.user.id)
+            .single();
+
+        if (roleError || !roleData) {
+            alert('Iniciaste sesión, pero no tienes un Rol asignado. Contacta al SysAdmin.');
+            await supabase.auth.signOut();
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Entrar';
+            return;
+        }
+
+        // Guardar el rol en memoria y cargar panel
+        sessionStorage.setItem('aesfact_role', roleData.role);
+        iniciarPanelAdmin();
     });
-    document.getElementById('logout-btn')?.addEventListener('click',()=>{sessionStorage.removeItem('aesfact_session');location.reload()});
-    
-    if(sessionStorage.getItem('aesfact_session')==='active'){
-        toggleAdmin(true);
-        loadAdminData();
-        loadAdminLists();
-        initMaintenanceControl(); 
-    }
+
+    // 3. Lógica de Logout
+    logoutBtn?.addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        sessionStorage.removeItem('aesfact_role');
+        location.reload();
+    });
+
     setupAdminListeners();
+}
+
+// Función auxiliar para revisar si ya estaba logueado
+async function verificarSesionActiva() {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session) {
+        // Buscar el rol del usuario guardado en la sesión
+        const { data: roleData } = await supabase
+            .from('admin_roles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+        if (roleData) {
+            sessionStorage.setItem('aesfact_role', roleData.role);
+            iniciarPanelAdmin();
+        }
+    }
+}
+
+// Función auxiliar para cargar la vista del Admin
+function iniciarPanelAdmin() {
+    toggleAdmin(true); 
+    loadAdminData(); 
+    loadAdminLists();
+    initMaintenanceControl();
+    
+    // Opcional: Mostrar el rol en la consola para confirmar
+    console.log("🟢 Sesión iniciada como:", sessionStorage.getItem('aesfact_role'));
 }
 
 // --- LÓGICA DEL SWITCH DE MANTENIMIENTO ---
