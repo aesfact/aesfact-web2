@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transparencia - AESFACT</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1/dist/umd/supabase.min.js"></script>
+    <style>
+        /* Encabezado con colores FIJOS para evitar errores de variables */
+        .transparency-header {
+            background: linear-gradient(135deg, #04293a, #0d5d9e); /* Azul oscuro a azul claro */
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 40px;
+        }
+        
+        .balance-box {
+            background: white;
+            color: #333;
+            max-width: 400px;
+            margin: -60px auto 30px; /* Sube la caja para que flote sobre el header */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            text-align: center;
+            position: relative;
+            z-index: 10; /* Asegura que quede encima */
+        }
+        
+        .balance-amount {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #0d5d9e;
+            margin: 10px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .public-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .public-table th, .public-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .public-table th {
+            background-color: #f8f9fa;
+            color: #04293a;
+            font-weight: bold;
+        }
+        
+        /* Etiquetas de colores */
+        .tag-ingreso { color: #27ae60; font-weight: bold; background: #e9f7ef; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .tag-gasto { color: #c0392b; font-weight: bold; background: #fdedec; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .balance-amount { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <button id="sidebar-toggle" class="sidebar-toggle" style="position: fixed; top: 15px; left: 15px; z-index: 1000; background: #04293a; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">☰</button>
+    
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-logo">
+            <img id="logo-img" src="img/Logo.jpg" alt="Logo AESFACT">
+        </div>
+        <div class="sidebar-header">
+            <h2>Menú</h2>
+        </div>
+        <nav id="sidebar-nav" class="sidebar-nav"></nav> </aside>
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <main class="container" style="max-width: 1200px; margin: 0 auto;">
+        
+        <header class="transparency-header">
+            <h1>Portal de Transparencia</h1>
+            <p style="opacity: 0.9;">Cuentas claras, asociación fuerte. Así gestionamos los recursos de la facultad.</p>
+        </header>
+
+        <div class="balance-box">
+            <small style="text-transform: uppercase; color: #777; font-weight: bold; letter-spacing: 1px;">Fondos Disponibles</small>
+            <div class="balance-amount" id="public-balance">---</div>
+            <div style="font-size: 0.9rem; color: #27ae60; background: #e8f5e9; display: inline-block; padding: 5px 10px; border-radius: 20px;">
+                ● Actualizado en tiempo real
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <h3 style="color: #04293a;">💰 Distribución de Fondos</h3>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="publicChart"></canvas>
+                </div>
+            </div>
+            <div class="card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <h3 style="color: #04293a;">📊 Resumen del Año</h3>
+                <p style="color: #666;">Nuestra gestión financiera se enfoca en la transparencia total. Aquí puedes ver el flujo acumulado de ingresos y egresos.</p>
+                <ul style="list-style: none; padding: 0; margin-top: 30px;">
+                    <li style="margin-bottom: 20px; display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                        <span>Total Recaudado (Ingresos):</span>
+                        <strong style="color: #27ae60; font-size: 1.2rem;" id="total-in">...</strong>
+                    </li>
+                    <li style="margin-bottom: 20px; display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                        <span>Total Invertido (Gastos):</span>
+                        <strong style="color: #c0392b; font-size: 1.2rem;" id="total-out">...</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="margin-top: 50px; margin-bottom: 50px;">
+            <h2 style="color: #04293a; border-left: 5px solid #0d5d9e; padding-left: 15px;">Últimos Movimientos</h2>
+            <div style="overflow-x: auto;">
+                <table class="public-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Concepto / Motivo</th>
+                            <th>Proyecto</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="public-transactions">
+                        <tr><td colspan="5" style="text-align:center; padding: 30px;">Cargando datos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="site-footer" style="background: #04293a; color: white; text-align: center; padding: 20px; margin-top: 40px;">
+        <div class="container"><small>&copy; 2026 Asociación de Estudiantes - Transparencia</small></div>
+    </footer>
+
+    <script src="js/app.js"></script> <script src="js/transparencia.js"></script> </body>
+</html>

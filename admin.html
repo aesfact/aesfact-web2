@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - AESFACT</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+  <style>
+    #search-mem, #proj-member-search {
+      border: 2px solid var(--blue-light);
+      background-color: #f0f8ff;
+      font-weight: 600;
+      color: var(--blue-accent);
+    }
+    .pulse-animation {
+      animation: pulse-blue 1.5s infinite;
+    }
+    @keyframes pulse-blue {
+      0% { box-shadow: 0 0 0 0 rgba(13, 93, 158, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(13, 93, 158, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(13, 93, 158, 0); }
+    }
+    /* Estilos para el Switch de Mantenimiento */
+    .switch-container {
+        display: flex;
+        align-items: center;
+        background: #fff3e0; /* Naranja muy suave */
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #ffe0b2;
+        margin-bottom: 20px;
+    }
+    .switch-label {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+        margin-right: 15px;
+    }
+    .switch-label input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #d32f2f; } /* Rojo cuando está activo (PELIGRO/MANTENIMIENTO) */
+    input:checked + .slider:before { transform: translateX(26px); }
+    #maint-status-text { font-weight: bold; color: #555; }
+  </style>
+</head>
+<body class="admin">
+  <div class="container">
+    
+    <h1 id="public-admin-title" style="text-align:center; margin-bottom: 20px;">Panel de Administración</h1>
+
+    <div id="login-panel" class="login-panel">
+      <h2>Acceso Seguro</h2>
+      <input type="text" id="admin-email" placeholder="Usuario o Email">
+      <input type="password" id="admin-pass" placeholder="Contraseña">
+      <button id="login-btn" class="btn" style="width:100%; margin-top:10px;">Entrar</button>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+      
+      <div class="switch-container">
+        <label class="switch-label">
+          <input type="checkbox" id="maintenance-toggle">
+          <span class="slider"></span>
+        </label>
+        <div>
+            <div style="font-size: 0.85rem; text-transform: uppercase; color: #e65100; font-weight: bold;">Control de Sitio</div>
+            <span id="maint-status-text">Web Operativa (Pública)</span>
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">Dashboard</h2>
+        <button id="logout-btn" class="btn muted">Salir</button>
+      </div>
+
+      <div class="admin-layout">
+        <nav class="admin-nav">
+          <a href="#sec-about">Nosotros</a>
+          <a href="#sec-projects">Proyectos</a>
+          <a href="#sec-events">Eventos</a>
+          <a href="#sec-news">Noticias</a>
+          <a href="finanzas.html" style="background-color: #e8f5e9; color: #2e7d32; font-weight: bold;">💰 Gestión Financiera</a>
+          <a href="#sec-members">Integrantes</a>
+          <a href="#sec-aesfact">AESFACT</a>
+        </nav>
+
+        <div class="admin-content">
+          
+          <section id="sec-about" class="admin-section card">
+            <h3>Nosotros</h3>
+            <label>Misión</label>
+            <textarea id="edit-mision"></textarea>
+            <label>Visión</label>
+            <textarea id="edit-vision"></textarea>
+            <label>Valores (uno por línea)</label>
+            <textarea id="edit-valores" rows="5"></textarea>
+            <label>Política</label>
+            <textarea id="edit-politica"></textarea>
+            <label>Objetivos (uno por línea)</label>
+            <textarea id="edit-objetivos" rows="4"></textarea>
+            <label>Objetivos Calidad (uno por línea)</label>
+            <textarea id="edit-objetivos-calidad" rows="4"></textarea>
+            <button id="save-about" class="btn">Guardar Información</button>
+          </section>
+
+          <section id="sec-projects" class="admin-section card">
+            <h3>Gestión de Proyectos</h3>
+            <div style="display:grid; gap:15px;">
+                <div>
+                    <label class="muted">Información Básica</label>
+                    <input id="proj-title" placeholder="Título del Proyecto">
+                    <textarea id="proj-desc" placeholder="Descripción general..." rows="3"></textarea>
+                    <div style="display:flex; gap:10px;">
+                        <input id="proj-date" type="date" style="margin:0;">
+                        <select id="proj-status" style="margin:0;">
+                            <option value="En curso">En curso</option>
+                            <option value="Terminado">Terminado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="proj-feedback-section" class="hidden" style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #dee2e6;">
+                    <label id="proj-feedback-label" style="color:var(--blue-accent); font-weight:bold;">Conclusiones / Motivo</label>
+                    <textarea id="proj-feedback" placeholder="Escribe aquí los detalles..." rows="3"></textarea>
+                </div>
+                <div id="proj-participants-section" class="hidden" style="background:#f0f8ff; padding:15px; border-radius:8px; border:1px solid #cce5ff;">
+                    <label style="color:var(--blue-light); font-weight:bold;">Participantes del Proyecto</label>
+                    <div style="display:flex; gap:5px; margin-bottom:10px; position: relative;">
+                        <input id="proj-member-search" placeholder="🔍 Buscar miembro para añadir..." style="margin:0; flex:1;">
+                        <div id="proj-member-results" style="position:absolute; background:white; border:1px solid #ddd; max-height:150px; overflow-y:auto; width:100%; display:none; z-index:100; top:45px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1);"></div>
+                    </div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <input id="proj-external-name" placeholder="Nombre voluntario/externo" style="margin:0; flex:1;">
+                        <button id="proj-add-external" class="btn" style="padding:10px;">Añadir</button>
+                    </div>
+                    <div id="proj-participants-list" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+                </div>
+                <div>
+                    <label class="muted">Galería de Imágenes (Se añaden a las existentes)</label>
+                    <input id="proj-gallery-files" type="file" multiple accept="image/*">
+                    <div id="proj-gallery-preview" class="media-preview" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+                </div>
+                <div class="admin-actions" style="margin-top:15px;">
+                    <button id="add-proj" class="btn" style="width:100%;">Guardar Proyecto</button>
+                    <button id="cancel-proj" class="btn muted hidden" style="width:100%;">Cancelar Edición</button>
+                </div>
+            </div>
+            <div id="proj-admin-list" style="margin-top:20px;"></div>
+          </section>
+
+          <section id="sec-events" class="admin-section card">
+            <h3>Eventos</h3>
+            <input id="evt-title" placeholder="Título">
+            <input id="evt-date" type="date">
+            <textarea id="evt-desc" placeholder="Descripción"></textarea>
+            <div class="admin-actions">
+                <button id="add-evt" class="btn">Agregar</button>
+                <button id="cancel-evt" class="btn muted hidden">Cancelar</button>
+            </div>
+            <div id="event-admin-list"></div>
+          </section>
+
+          <section id="sec-news" class="admin-section card">
+            <h3>Noticias</h3>
+            <input id="news-title" placeholder="Título">
+            <textarea id="news-body" placeholder="Contenido"></textarea>
+            <input id="news-date" type="date">
+            <p class="muted">Imagen (Subir archivo o pegar URL)</p>
+            <input id="news-image-url" placeholder="URL de imagen (opcional)">
+            <input id="news-image-file" type="file" accept="image/*">
+            <div class="admin-actions">
+                <button id="add-news" class="btn">Agregar</button>
+                <button id="cancel-news" class="btn muted hidden">Cancelar</button>
+            </div>
+            <div id="news-admin-list"></div>
+          </section>
+
+          <section id="sec-members" class="admin-section card">
+            <h3>Integrantes</h3>
+            <input id="mem-name" placeholder="Nombre">
+            <input id="mem-role" placeholder="Cargo">
+            <input id="mem-email" placeholder="Email">
+            <input id="mem-phone" placeholder="Teléfono">
+            <p class="muted">Foto</p>
+            <input id="mem-photo-url" placeholder="URL Foto">
+            <input id="mem-photo-file" type="file" accept="image/*">
+            
+            <div class="admin-actions">
+                <button id="add-mem" class="btn">Agregar</button>
+                <button id="cancel-mem" class="btn muted hidden">Cancelar</button>
+            </div>
+
+            <div style="margin-top: 25px; margin-bottom: 10px;">
+                <label style="font-size: 0.9rem; color: var(--muted);">Filtrar lista:</label>
+                <input id="search-mem" placeholder="🔍 Buscar integrante por nombre..." style="margin-top: 5px;">
+            </div>
+
+            <div id="member-admin-list"></div>
+          </section>
+
+          <section id="sec-aesfact" class="admin-section card">
+            <h3>AESFACT Portada</h3>
+            <input id="aesfact-year" placeholder="Año (ej: 2026)">
+            <input id="aesfact-image-url" placeholder="URL Imagen principal">
+            <input id="aesfact-image-file" type="file" accept="image/*">
+            <button id="save-aesfact" class="btn">Guardar AESFACT</button>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>

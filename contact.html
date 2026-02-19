@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Contacto - AESFACT</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+</head>
+<body>
+  <button id="sidebar-toggle" class="sidebar-toggle">≡</button>
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-logo">
+      <img id="logo-img" src="img/Logo.jpg" alt="Logo AESFACT">
+    </div>
+    <div class="sidebar-header">
+      <h2>Menú</h2>
+    </div>
+    <nav id="sidebar-nav" class="sidebar-nav"></nav>
+  </aside>
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <main class="container">
+    <section class="card">
+      <h2>Contacto</h2>
+      <form id="contact-form">
+        <input id="contact-name" placeholder="Nombre" required>
+        <input id="contact-email" type="email" placeholder="Email" required>
+        <input id="contact-phone" placeholder="Teléfono">
+        <textarea id="contact-message" placeholder="Mensaje"></textarea>
+        <button class="btn" type="submit">Enviar</button>
+      </form>
+      <p id="contact-sent" class="muted"></p>
+    </section>
+
+    <section class="card social-section">
+      <h2>Síguenos en Redes Sociales 📱</h2>
+      <div class="social-buttons">
+        <a href="https://api.whatsapp.com/send/?phone=50326456500&text&app_absent=0" target="_blank" rel="noopener noreferrer" class="social-btn whatsapp">
+          <span class="social-icon">💬</span>
+          <span class="social-text">WhatsApp</span>
+        </a>
+        <a href="https://www.tiktok.com/@ugb.sv" target="_blank" rel="noopener noreferrer" class="social-btn tiktok">
+          <span class="social-icon">🎵</span>
+          <span class="social-text">TikTok</span>
+        </a>
+        <a href="https://www.facebook.com/ugboficial" target="_blank" rel="noopener noreferrer" class="social-btn facebook">
+          <span class="social-icon">👍</span>
+          <span class="social-text">Facebook</span>
+        </a>
+        <a href="https://twitter.com/ugb_sv" target="_blank" rel="noopener noreferrer" class="social-btn twitter">
+          <span class="social-icon">𝕏</span>
+          <span class="social-text">Twitter / X</span>
+        </a>
+        <a href="https://www.youtube.com/@ugb_sv" target="_blank" rel="noopener noreferrer" class="social-btn youtube">
+          <span class="social-icon">📺</span>
+          <span class="social-text">YouTube</span>
+        </a>
+        <a href="https://www.instagram.com/ugb.sv/" target="_blank" rel="noopener noreferrer" class="social-btn instagram">
+          <span class="social-icon">📷</span>
+          <span class="social-text">Instagram</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container"><small>&copy; Asociación de Estudiantes - UGB</small></div></footer>
+  <script src="js/app.js"></script>
+</body>
+</html>

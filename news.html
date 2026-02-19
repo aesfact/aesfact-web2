@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Noticias - AESFACT</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+</head>
+<body>
+  <button id="sidebar-toggle" class="sidebar-toggle">≡</button>
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-logo">
+      <img id="logo-img" src="img/Logo.jpg" alt="Logo AESFACT">
+    </div>
+    <div class="sidebar-header">
+      <h2>Menú</h2>
+    </div>
+    <nav id="sidebar-nav" class="sidebar-nav"></nav>
+  </aside>
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <main class="container">
+    <section class="card">
+      <h2>Noticias</h2>
+      <div id="news-list" class="grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container"><small>&copy; Asociación de Estudiantes - UGB</small></div></footer>
+
+  <!-- Modal para expandir noticias -->
+  <div id="news-modal" class="modal hidden">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeNewsModal()">✕</button>
+      <div id="news-modal-body"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

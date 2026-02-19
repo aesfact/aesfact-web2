@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nosotros - AESFACT</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+</head>
+<body>
+  <button id="sidebar-toggle" class="sidebar-toggle">≡</button>
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-logo">
+      <img id="logo-img" src="img/Logo.jpg" alt="Logo AESFACT">
+    </div>
+    <div class="sidebar-header">
+      <h2>Menú</h2>
+    </div>
+    <nav id="sidebar-nav" class="sidebar-nav"></nav>
+  </aside>
+  <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+  <main class="container">
+    <section class="card">
+      <h2>Nosotros</h2>
+      <h3>Misión</h3>
+      <p id="mision"></p>
+      <h3>Visión</h3>
+      <p id="vision"></p>
+      <h3>Valores</h3>
+      <ul id="valores"></ul>
+      <h3>Política de Calidad</h3>
+      <p id="politica"></p>
+      <h3>Objetivos</h3>
+      <ul id="objetivos"></ul>
+      <h3>Objetivos de Calidad</h3>
+      <ul id="objetivos-calidad"></ul>
+    </section>
+
+    <section class="card resources-section">
+      <h2>Todo lo que necesitas está aquí 🚀</h2>
+      <div class="resources-grid">
+        <a href="https://ugb.edu.sv/reglamentos/" target="_blank" rel="noopener noreferrer" class="resource-btn">
+          <span class="btn-icon">📋</span>
+          <span class="btn-text">Reglamentos Institucionales</span>
+        </a>
+        <a href="https://ugb.edu.sv/catalogos/" target="_blank" rel="noopener noreferrer" class="resource-btn">
+          <span class="btn-icon">📚</span>
+          <span class="btn-text">Catálogos Institucionales</span>
+        </a>
+        <a href="https://ugb.edu.sv/politicas/" target="_blank" rel="noopener noreferrer" class="resource-btn">
+          <span class="btn-icon">⚖️</span>
+          <span class="btn-text">Políticas Institucionales</span>
+        </a>
+        <a href="https://ugb.edu.sv/instructivos/" target="_blank" rel="noopener noreferrer" class="resource-btn">
+          <span class="btn-icon">🎓</span>
+          <span class="btn-text">Instructivos Académicos</span>
+        </a>
+        <a href="https://ugb.edu.sv/wp-content/download/pdf/Plan%20Estrat%C3%A9gico%20Institucional_Resumen.pdf" target="_blank" rel="noopener noreferrer" class="resource-btn">
+          <span class="btn-icon">🎯</span>
+          <span class="btn-text">Plan Estratégico</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="container"><small>&copy; Asociación de Estudiantes - UGB</small></div></footer>
+  <script src="js/app.js"></script>
+</body>
+</html>

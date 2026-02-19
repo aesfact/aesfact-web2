@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanzas - AESFACT</title>
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --green-finance: #2ecc71;
+            --red-finance: #e74c3c;
+            --dark-blue: #04293a;
+        }
+        body { background-color: #f4f7f6; }
+        .finance-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        
+        /* Header y Totales */
+        .finance-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .total-card {
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; min-width: 250px;
+        }
+        .total-amount { font-size: 2.5rem; font-weight: bold; color: var(--dark-blue); }
+        .total-label { color: #7f8c8d; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Gráficos y Filtros Rápidos */
+        .chart-section {
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px;
+            display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
+        }
+        .filters { display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+        .filter-btn {
+            padding: 10px; border: 1px solid #ddd; background: #f8f9fa;
+            border-radius: 6px; cursor: pointer; transition: 0.3s;
+        }
+        .filter-btn.active { background: var(--dark-blue); color: white; border-color: var(--dark-blue); }
+
+        /* --- NUEVO: GENERADOR DE REPORTES --- */
+        .report-generator {
+            background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            border: 1px solid #dae1e7;
+        }
+        .report-controls {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 0.85rem;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            min-width: 150px;
+        }
+        .btn-report {
+            background-color: #04293a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+            height: 40px; /* Para alinear con los inputs */
+        }
+        .btn-report:hover { background-color: #0d5d9e; }
+
+        /* Listas de Movimientos */
+        .movements-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .col-title { font-size: 1.2rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .income-col h3 { color: var(--green-finance); }
+        .expense-col h3 { color: var(--red-finance); }
+
+        .transaction-card {
+            background: white; padding: 15px; border-radius: 8px;
+            margin-bottom: 10px; border-left: 5px solid #ccc;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
+        }
+        .t-income { border-left-color: var(--green-finance); }
+        .t-expense { border-left-color: var(--red-finance); }
+        .t-info h4 { margin: 0 0 5px 0; color: #333; }
+        .t-info small { color: #999; }
+        .t-amount { font-weight: bold; font-size: 1.1rem; }
+        .t-project-badge {
+            background: #e1f5fe; color: #0277bd; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;
+        }
+
+        /* Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal.hidden { display: none; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; }
+        
+        /* Botón flotante */
+        .fab {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--dark-blue); color: white;
+            width: 60px; height: 60px; border-radius: 50%;
+            font-size: 30px; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; border: none;
+        }
+        .fab:hover { transform: scale(1.1); }
+        
+        @media (max-width: 768px) {
+            .movements-grid { grid-template-columns: 1fr; }
+            .chart-section { grid-template-columns: 1fr; }
+            .report-controls { flex-direction: column; align-items: stretch; }
+        }
+
+        /* Botones de Acción (Editar/Borrar) */
+        .action-buttons { display: flex; gap: 10px; }
+        .btn-action {
+            border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer;
+            font-size: 1.2rem; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-edit { background-color: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+        .btn-edit:hover { background-color: #2196f3; color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4); }
+        .btn-delete { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .btn-delete:hover { background-color: #f44336; color: white; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4); }
+    </style>
+</head>
+<body>
+
+    <div style="background: white; padding: 15px; border-bottom: 1px solid #eee;">
+        <div class="finance-container" style="padding: 0; display: flex; justify-content: space-between; align-items: center;">
+            <a href="admin.html" style="text-decoration: none; color: #555; font-weight: bold;">← Volver al Admin</a>
+            <h2 style="margin: 0; color: var(--dark-blue);">Gestión Financiera</h2>
+        </div>
+    </div>
+
+    <div class="finance-container">
+        
+        <div class="finance-header">
+            <div class="total-card">
+                <div class="total-label">Balance Total en Caja</div>
+                <div class="total-amount" id="net-total">$0.00</div>
+            </div>
+        </div>
+
+        <section class="chart-section">
+            <div style="height: 300px; position: relative;">
+                <canvas id="financeChart"></canvas>
+            </div>
+            <div class="filters">
+                <h4 style="margin-top: 0;">Filtros Visuales</h4>
+                <button class="filter-btn active" onclick="filtrarFinanzas('todo')">Todo el Historial</button>
+                <button class="filter-btn" onclick="filtrarFinanzas('mes')">Este Mes</button>
+                <button class="filter-btn" onclick="filtrarFinanzas('anio')">Este Año</button>
+            </div>
+        </section>
+
+        <section class="report-generator">
+            <h3 style="margin-top: 0; color: var(--dark-blue); border-bottom: 2px solid #e1e4e8; padding-bottom: 10px; margin-bottom: 15px;">
+                📄 Generar Reporte Oficial
+            </h3>
+            <div class="report-controls">
+                <div class="form-group">
+                    <label>Fecha Inicio:</label>
+                    <input type="date" id="rep-start">
+                </div>
+                <div class="form-group">
+                    <label>Fecha Fin:</label>
+                    <input type="date" id="rep-end">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Reporte:</label>
+                    <select id="rep-type">
+                        <option value="todo">Completo (Ingresos y Gastos)</option>
+                        <option value="ingreso">Solo Ingresos</option>
+                        <option value="gasto">Solo Egresos</option>
+                    </select>
+                </div>
+                <button class="btn-report" onclick="generarReportePDF()">
+                    <span>🖨️</span> Descargar PDF
+                </button>
+            </div>
+            <p style="font-size: 0.8rem; color: #777; margin-top: 10px;">
+                * Selecciona un rango de fechas para generar un documento contable listo para entregar.
+            </p>
+        </section>
+        <div class="movements-grid">
+            <div class="income-col">
+                <div class="col-title">
+                    <span>💰</span> <h3>Ingresos</h3>
+                </div>
+                <div id="income-list"></div>
+            </div>
+
+            <div class="expense-col">
+                <div class="col-title">
+                    <span>📉</span> <h3>Egresos / Gastos</h3>
+                </div>
+                <div id="expense-list"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <button class="fab" onclick="abrirModal()">+</button>
+
+    <div id="finance-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="modal-title" style="margin-top: 0;">Registrar Movimiento</h3>
+            
+            <label>Tipo de Movimiento</label>
+            <select id="f-type" style="width: 100%; padding: 10px; margin-bottom: 15px;" onchange="toggleProjectSelect()">
+                <option value="ingreso">Ingreso (Entrada de Dinero)</option>
+                <option value="gasto">Gasto (Salida de Dinero)</option>
+            </select>
+
+            <label>Monto ($)</label>
+            <input type="number" id="f-amount" placeholder="0.00" step="0.01" style="width: 100%; padding: 10px; margin-bottom: 15px;">
+
+            <label>Concepto / Motivo</label>
+            <input type="text" id="f-concept" placeholder="Ej: Venta de Camisas" style="width: 100%; padding: 10px; margin-bottom: 15px;">
+
+            <label>Fecha</label>
+            <input type="date" id="f-date" style="width: 100%; padding: 10px; margin-bottom: 15px;">
+
+            <div id="project-select-container" class="hidden">
+                <label>Proyecto Relacionado (Opcional)</label>
+                <select id="f-project" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #fff3e0;">
+                    <option value="">-- Ninguno --</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="guardarMovimiento()" class="btn" style="flex: 1; background: var(--dark-blue); color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Guardar</button>
+                <button onclick="cerrarModal()" style="flex: 1; background: #ccc; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/finanzas.js"></script>
+</body>
+</html>

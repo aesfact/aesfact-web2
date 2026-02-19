@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico - AESFACT</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+    <style>
+        body { font-family: monospace; max-width: 900px; margin: 20px auto; padding: 20px; background: #f5f8fb; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        h1 { color: #013a63; }
+        .section { margin: 20px 0; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #fafafa; }
+        .section h3 { margin-top: 0; color: #0d5d9e; }
+        pre { background: #333; color: #0f0; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 12px; }
+        .gallery-list { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+        .gallery-item { width: 100px; height: 100px; border: 2px solid #ddd; border-radius: 6px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 12px; overflow: hidden; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        button { background: #013a63; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0d5d9e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnóstico de Datos - AESFACT</h1>
+        
+        <div class="section">
+            <h3>Acciones</h3>
+            <button onclick="location.reload()">Refrescar</button>
+            <button onclick="clearData()">Limpiar localStorage</button>
+            <button onclick="location.href='initialize.html'">Reinicializar datos</button>
+        </div>
+
+        <div class="section">
+            <h3>Estado de localStorage</h3>
+            <div id="storage-status"></div>
+        </div>
+
+        <div class="section">
+            <h3>Información de AESFACT</h3>
+            <div id="aesfact-info"></div>
+        </div>
+
+        <div class="section">
+            <h3>Contenido de Galería</h3>
+            <div id="gallery-info"></div>
+            <div id="gallery-preview" class="gallery-list"></div>
+        </div>
+
+        <div class="section">
+            <h3>Datos Completos (JSON)</h3>
+            <pre id="full-data"></pre>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'aesfact_data_v1';
+
+        function clearData() {
+            if (confirm('¿Estás seguro de que deseas limpiar todos los datos?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                alert('localStorage limpiado');
+                location.reload();
+            }
+        }
+
+        function readData() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        const data = readData();
+
+        // Storage status
+        const storageEl = document.getElementById('storage-status');
+        if (data) {
+            storageEl.innerHTML = '<span class="success">✓ Datos encontrados en localStorage</span>';
+        } else {
+            storageEl.innerHTML = '<span class="error">✗ No hay datos en localStorage. <a href="initialize.html">Haz clic aquí para inicializar</a></span>';
+        }
+
+        // AESFACT info
+        const aesEl = document.getElementById('aesfact-info');
+        if (data && data.aesfact) {
+            const aes = data.aesfact;
+            aesEl.innerHTML = `
+                <p><strong>Año:</strong> ${aes.year}</p>
+                <p><strong>Imagen guardada:</strong> ${aes.image ? '✓ Sí (' + Math.round(aes.image.length / 1024) + ' KB)' : '✗ No'}</p>
+                ${aes.image ? '<p><img src="' + aes.image + '" style="max-width: 200px; border: 2px solid #ddd; border-radius: 6px;"></p>' : ''}
+            `;
+        } else {
+            aesEl.innerHTML = '<span class="error">No hay datos de AESFACT</span>';
+        }
+
+        // Gallery info
+        const galEl = document.getElementById('gallery-info');
+        const galPreview = document.getElementById('gallery-preview');
+        if (data && data.gallery && data.gallery.length > 0) {
+            galEl.innerHTML = `<span class="success">✓ Galería con ${data.gallery.length} imagen(es)</span>`;
+            data.gallery.forEach((img, idx) => {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                if (img && img.startsWith('data:')) {
+                    div.innerHTML = '<img src="' + img + '">';
+                } else {
+                    div.innerHTML = '<span style="font-size: 10px;">URL: ' + (img ? img.substring(0, 20) + '...' : 'vacío') + '</span>';
+                }
+                galPreview.appendChild(div);
+            });
+        } else {
+            galEl.innerHTML = '<span class="error">✗ Galería vacía</span>';
+        }
+
+        // Full data
+        const fullEl = document.getElementById('full-data');
+        if (data) {
+            fullEl.textContent = JSON.stringify(data, null, 2).substring(0, 2000) + '\n... (datos truncados para brevedad)';
+        } else {
+            fullEl.textContent = 'No hay datos';
+        }
+    </script>
+</body>
+</html>
