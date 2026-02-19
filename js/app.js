@@ -263,7 +263,10 @@ function initAdmin() {
         });
 
         if (error) {
-            alert('Error de acceso: Credenciales incorrectas.');
+            // 👇 AGREGA ESTA LÍNEA PARA VER EL CHISME COMPLETO 👇
+            console.error("🚨 Error real de Supabase:", error.message); 
+            
+            alert('Error de acceso: ' + error.message); // Cambiamos la alerta para que muestre el error real
             loginBtn.disabled = false;
             loginBtn.textContent = 'Entrar';
             return;
