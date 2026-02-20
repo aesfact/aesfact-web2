@@ -10,6 +10,7 @@ let tempParticipants = [];
 let tempGallery = [];
 
 // --- INICIO PRINCIPAL ---
+// --- INICIO PRINCIPAL ---
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Iniciando AESFACT App...');
     
@@ -23,6 +24,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderNav();
     bindContact();
     bindNewsModal();
+    
+    // 🔥 EL EASTER EGG PRO (3 CLICS RÁPIDOS) 🔥
+    const adminTrigger = document.getElementById('admin-trigger');
+    if (adminTrigger) {
+        let clickCount = 0;
+        let clickTimer = null;
+        
+        adminTrigger.addEventListener('click', () => {
+            clickCount++; // Sumamos un clic
+            
+            // Si es el primer clic, iniciamos un reloj de medio segundo
+            if (clickCount === 1) {
+                clickTimer = setTimeout(() => { 
+                    clickCount = 0; // Si pasa medio segundo y no completó los 3 clics, se resetea
+                }, 600); 
+            }
+            
+            // Si logra hacer 3 clics rápidos antes de que acabe el tiempo... ¡Bum!
+            if (clickCount === 3) {
+                clearTimeout(clickTimer);
+                window.location.href = 'admin.html';
+            }
+        });
+    }
     
     if (document.body.classList.contains('admin')) initAdmin();
 });
