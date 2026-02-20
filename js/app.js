@@ -1,4 +1,4 @@
-// app.js - VERSIÓN FINAL (CON LIMPIEZA DE STORAGE CORREGIDA)
+// app.js - VERSIÓN DEFINITIVA (ROLES, MENSAJES Y LIMPIEZA)
 // ============================================================
 
 const SUPABASE_URL = 'https://vjdwzfvvbybwwymtqoym.supabase.co';
@@ -13,21 +13,17 @@ let tempGallery = [];
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Iniciando AESFACT App...');
     
-    // 1. Conectar a Supabase primero
     await initSupabase();
 
-    // 2. Verificar mantenimiento
     const stopRendering = await checkMaintenanceModeGuard();
     if (stopRendering) return; 
 
-    // 3. Cargar web normal
     await renderPublic(); 
     bindSidebar();
     renderNav();
     bindContact();
     bindNewsModal();
     
-    // 4. Si es admin, iniciar lógica
     if (document.body.classList.contains('admin')) initAdmin();
 });
 
@@ -59,7 +55,7 @@ async function checkMaintenanceModeGuard() {
         const isMaintenanceOn = data ? data.is_enabled : false;
 
         if (isMaintenanceOn) {
-            const isAdmin = sessionStorage.getItem('aesfact_session') === 'active';
+            const isAdmin = sessionStorage.getItem('aesfact_role'); 
             
             if (isAdmin) {
                 console.log('🛡️ Mantenimiento ACTIVO (Admin Acceso).');
@@ -91,11 +87,9 @@ function setupRealtime() {
     }).subscribe();
 }
 
-// --- UTILIDADES DE STORAGE (CORREGIDAS) ---
-
+// --- UTILIDADES DE STORAGE ---
 async function uploadImageToStorage(file, folderName) {
     try {
-        // Limpiamos el nombre para evitar caracteres raros
         const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_').toLowerCase();
         const filePath = `${folderName}/${Date.now()}_${cleanName}`;
         
@@ -108,56 +102,54 @@ async function uploadImageToStorage(file, folderName) {
 }
 
 function getFilePathFromUrl(url) {
-    // Verifica si la URL pertenece a tu bucket 'media'
     if (!url || !url.includes('/storage/v1/object/public/media/')) return null;
-    
-    // Extrae la parte después de 'media/'
     const path = url.split('/storage/v1/object/public/media/')[1];
-    
-    // IMPORTANTE: Decodificar la URL (ej: convertir %20 en espacios)
     return decodeURIComponent(path);
 }
 
 async function deleteFileFromStorage(url) {
     const path = getFilePathFromUrl(url);
     if (path) {
-        // Intentar borrar del bucket 'media'
         const { error } = await supabase.storage.from('media').remove([path]);
-        
-        if (error) {
-            console.error('Error borrando archivo de storage:', error.message);
-        } else {
-            console.log('✅ Archivo eliminado correctamente del storage:', path);
-        }
-    } else {
-        console.warn('No se pudo extraer el path del archivo (quizás es externo):', url);
+        if (error) console.error('Error borrando archivo de storage:', error.message);
+        else console.log('✅ Archivo eliminado correctamente:', path);
     }
 }
 
-// --- MANEJO DE DATOS ---
-
+// --- MANEJO DE DATOS PÚBLICOS ---
 async function readData() {
     if (!supabase) return null;
-    const dataStore = { mision:'', vision:'', valores:[], politica:'', objetivos:[], objetivos_calidad:[], news:[], projects:[], events:[], members:[], aesfact:{year:'',image:''}, gallery:[] };
+    const dataStore = { mision:'', vision:'', valores:[], politica:'', objetivos:[], objetivos_calidad:[], news:[], projects:[], events:[], members:[], aesfact:{year:'',image:''}, gallery:[], contacts:[] };
     try {
-        const [conf, nw, pr, ev, me, ae] = await Promise.all([
+        const queries = [
             supabase.from('config').select('*'),
             supabase.from('news').select('*').order('date', { ascending: false }),
             supabase.from('projects').select('*').order('date', { ascending: false }),
             supabase.from('events').select('*').order('date', { ascending: true }),
             supabase.from('members').select('*'),
             supabase.from('aesfact').select('*').eq('id', 'aesfact').single()
-        ]);
+        ];
+        
+        // Si es Admin, también traemos los mensajes
+        if (sessionStorage.getItem('aesfact_role')) {
+            queries.push(supabase.from('contacts').select('*').order('date', { ascending: false }));
+        }
+
+        const res = await Promise.all(queries);
+        const [conf, nw, pr, ev, me, ae] = res;
+        const co = res[6]; 
+
         if(conf.data) conf.data.forEach(i=>{ try{ if(['valores','objetivos','objetivos_calidad'].includes(i.key)) dataStore[i.key]=JSON.parse(i.value); else dataStore[i.key]=i.value; }catch(e){} });
         dataStore.news=nw.data||[]; dataStore.projects=pr.data||[]; dataStore.events=ev.data||[]; dataStore.members=me.data||[];
         if(ae.data) dataStore.aesfact=ae.data;
+        if(co && co.data) dataStore.contacts = co.data; 
+
         if(dataStore.aesfact.image) dataStore.gallery.push(dataStore.aesfact.image);
         dataStore.news.forEach(n=>{if(n.image)dataStore.gallery.push(n.image)});
+        
         return dataStore;
     } catch(e) { return null; }
 }
-
-// --- RENDERIZADO PÚBLICO ---
 
 async function renderPublic() {
     const data = await readData(); if (!data) return;
@@ -235,20 +227,16 @@ window.moveSlide = (sid, dir) => {
     s[n].classList.add('active'); const cnt=document.getElementById(`${sid}-c`); if(cnt)cnt.textContent=n+1;
 };
 
-// --- ADMINISTRACIÓN ---
-
-
-
-// --- ADMINISTRACIÓN SEGURA (NUEVO) ---
+// ============================================================
+// --- ADMINISTRACIÓN SEGURA (CON PERMISOS DINÁMICOS) ---
+// ============================================================
 
 function initAdmin() {
     const loginBtn = document.getElementById('login-btn');
     const logoutBtn = document.getElementById('logout-btn');
 
-    // 1. Verificar si ya hay una sesión activa en Supabase al cargar la página
     verificarSesionActiva();
 
-    // 2. Lógica de Login
     loginBtn?.addEventListener('click', async () => {
         const email = document.getElementById('admin-email').value.trim();
         const password = document.getElementById('admin-pass').value.trim();
@@ -256,80 +244,145 @@ function initAdmin() {
         loginBtn.disabled = true;
         loginBtn.textContent = 'Verificando...';
 
-        // Intentar iniciar sesión con Supabase Auth
         const { data, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
+            email: email, password: password,
         });
 
         if (error) {
-            // 👇 AGREGA ESTA LÍNEA PARA VER EL CHISME COMPLETO 👇
             console.error("🚨 Error real de Supabase:", error.message); 
-            
-            alert('Error de acceso: ' + error.message); // Cambiamos la alerta para que muestre el error real
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Entrar';
-            return;
+            alert('Error de acceso: ' + error.message);
+            loginBtn.disabled = false; loginBtn.textContent = 'Entrar'; return;
         }
 
-        // Si el login es exitoso, buscar su ROL en la base de datos
+        // AHORA PEDIMOS TAMBIÉN EL 'name'
         const { data: roleData, error: roleError } = await supabase
             .from('admin_roles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
+            .select('role, status, name') 
+            .eq('id', data.user.id).single();
 
         if (roleError || !roleData) {
-            alert('Iniciaste sesión, pero no tienes un Rol asignado. Contacta al SysAdmin.');
+            alert('No tienes un Rol asignado. Contacta al SysAdmin.');
             await supabase.auth.signOut();
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Entrar';
-            return;
+            loginBtn.disabled = false; loginBtn.textContent = 'Entrar'; return;
         }
 
-        // Guardar el rol en memoria y cargar panel
+        if (roleData.status === 'pausado') {
+            alert('⛔ Tu cuenta ha sido temporalmente suspendida por el SysAdmin.');
+            await supabase.auth.signOut();
+            loginBtn.disabled = false; loginBtn.textContent = 'Entrar'; return;
+        }
+
+        const { data: permData } = await supabase.from('role_permissions').select('allowed_modules').eq('role', roleData.role).single();
+
+        // GUARDAMOS EL NOMBRE TAMBIÉN
         sessionStorage.setItem('aesfact_role', roleData.role);
+        sessionStorage.setItem('aesfact_name', roleData.name); 
+        if(permData) sessionStorage.setItem('aesfact_permissions', JSON.stringify(permData.allowed_modules));
+
         iniciarPanelAdmin();
     });
 
-    // 3. Lógica de Logout
     logoutBtn?.addEventListener('click', async () => {
         await supabase.auth.signOut();
         sessionStorage.removeItem('aesfact_role');
+        sessionStorage.removeItem('aesfact_name');
+        sessionStorage.removeItem('aesfact_permissions');
         location.reload();
     });
 
-    setupAdminListeners();
+    setupAdminListeners(); 
 }
 
-// Función auxiliar para revisar si ya estaba logueado
 async function verificarSesionActiva() {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (session) {
-        // Buscar el rol del usuario guardado en la sesión
-        const { data: roleData } = await supabase
-            .from('admin_roles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-
-        if (roleData) {
+        const { data: roleData } = await supabase.from('admin_roles').select('role, status, name').eq('id', session.user.id).single();
+        
+        if (roleData && roleData.status !== 'pausado') {
+            const { data: permData } = await supabase.from('role_permissions').select('allowed_modules').eq('role', roleData.role).single();
             sessionStorage.setItem('aesfact_role', roleData.role);
+            sessionStorage.setItem('aesfact_name', roleData.name); // GUARDAMOS EL NOMBRE
+            if(permData) sessionStorage.setItem('aesfact_permissions', JSON.stringify(permData.allowed_modules));
             iniciarPanelAdmin();
+        } else {
+            if (roleData && roleData.status === 'pausado') {
+                alert('⛔ Tu sesión ha caducado porque tu cuenta fue suspendida.');
+            }
+            await supabase.auth.signOut();
+            sessionStorage.removeItem('aesfact_role');
+            sessionStorage.removeItem('aesfact_name');
+            sessionStorage.removeItem('aesfact_permissions');
+            toggleAdmin(false); 
         }
     }
 }
 
-// Función auxiliar para cargar la vista del Admin
 function iniciarPanelAdmin() {
     toggleAdmin(true); 
+    aplicarPermisosVisuales(); 
     loadAdminData(); 
     loadAdminLists();
     initMaintenanceControl();
-    
-    // Opcional: Mostrar el rol en la consola para confirmar
-    console.log("🟢 Sesión iniciada como:", sessionStorage.getItem('aesfact_role'));
+}
+
+function toggleAdmin(show) { // <-- AQUÍ ESTÁ, A SALVO
+    if (show) { 
+        document.getElementById('login-panel').classList.add('hidden'); 
+        document.getElementById('public-admin-title').classList.add('hidden'); 
+        document.getElementById('admin-panel').classList.remove('hidden'); 
+    }
+}
+
+function aplicarPermisosVisuales() {
+    const permsRaw = sessionStorage.getItem('aesfact_permissions');
+    if (!permsRaw) return;
+    const allowed = JSON.parse(permsRaw);
+
+    const moduleMap = {
+        'panel_sysadmin':['#btn-sysadmin-link'],
+        'mantenimiento': ['.switch-container'],
+        'nosotros':      ['a[href="#sec-about"]', '#sec-about'],
+        'proyectos':     ['a[href="#sec-projects"]', '#sec-projects'],
+        'eventos':       ['a[href="#sec-events"]', '#sec-events'],
+        'noticias':      ['a[href="#sec-news"]', '#sec-news'],
+        'contactos':     ['a[href="#sec-contacts"]', '#sec-contacts'], // EL DE MENSAJES
+        'finanzas':      ['a[href="finanzas.html"]'], 
+        'integrantes':   ['a[href="#sec-members"]', '#sec-members'],
+        'aesfact':       ['a[href="#sec-aesfact"]', '#sec-aesfact']
+    };
+
+    Object.values(moduleMap).forEach(selectors => {
+        selectors.forEach(sel => {
+            const el = document.querySelector(sel);
+            if (el) el.style.display = 'none';
+        });
+    });
+
+    allowed.forEach(modName => {
+        if (moduleMap[modName]) {
+            moduleMap[modName].forEach(sel => {
+                const el = document.querySelector(sel);
+                if (el) el.style.display = ''; 
+            });
+        }
+    });
+
+    const titleEl = document.getElementById('public-admin-title');
+    if (titleEl && !titleEl.querySelector('.role-badge')) {
+        const roleTitle = document.createElement('div');
+        roleTitle.className = 'role-badge';
+        
+        // AHORA MUESTRA EL NOMBRE Y EL ROL
+        const userName = sessionStorage.getItem('aesfact_name') || 'Usuario';
+        const userRole = sessionStorage.getItem('aesfact_role');
+        
+        roleTitle.innerHTML = `<span style="background:var(--blue-light); color:white; padding:5px 12px; border-radius:15px; font-size:0.85rem; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">👤 ${userName} | 🛡️ ${userRole}</span>`;
+        
+        titleEl.appendChild(roleTitle);
+        const dashTitle = document.querySelector('#admin-panel h2');
+        if(dashTitle) dashTitle.appendChild(roleTitle);
+    }
 }
 
 // --- LÓGICA DEL SWITCH DE MANTENIMIENTO ---
@@ -338,64 +391,38 @@ async function initMaintenanceControl() {
     const text = document.getElementById('maint-status-text');
     if(!toggle || !text) return;
 
-    console.log("🔄 Consultando mantenimiento...");
-
     try {
-        const { data, error } = await supabase
-            .from('site_controls')
-            .select('*')
-            .eq('control_name', 'maintenance_mode')
-            .maybeSingle();
-
-        if (error) console.error("❌ Error leyendo mantenimiento:", error.message);
-
-        const isMaintained = (data && data.is_enabled === true);
-        
-        toggle.checked = isMaintained;
-        updateMaintText(isMaintained);
-
-    } catch (e) { console.error("Error crítico initMaintenanceControl:", e); }
+        const { data, error } = await supabase.from('site_controls').select('*').eq('control_name', 'maintenance_mode').maybeSingle();
+        if (!error) {
+            const isMaintained = (data && data.is_enabled === true);
+            toggle.checked = isMaintained;
+            updateMaintText(isMaintained);
+        }
+    } catch (e) { console.error(e); }
 
     toggle.addEventListener('change', async (e) => {
         const newState = e.target.checked;
         updateMaintText(newState);
-        console.log("Cambio detectado. Guardando:", newState);
-
-        const { error } = await supabase
-            .from('site_controls')
-            .update({ is_enabled: newState })
-            .eq('control_name', 'maintenance_mode'); 
-        
+        const { error } = await supabase.from('site_controls').update({ is_enabled: newState }).eq('control_name', 'maintenance_mode'); 
         if(error) {
-            alert('Error al guardar en BD: ' + error.message);
+            alert('Error al guardar: ' + error.message);
             toggle.checked = !newState;
             updateMaintText(!newState);
-        } else {
-            console.log("✅ Guardado correctamente.");
         }
     });
 
     function updateMaintText(active) {
         if(active) {
-            text.textContent = "🔴 MANTENIMIENTO ACTIVO (Web Cerrada)";
+            text.textContent = "🔴 MANTENIMIENTO ACTIVO";
             text.style.color = "#d32f2f";
-            text.style.fontWeight = "bold";
         } else {
-            text.textContent = "🟢 Web Operativa (Pública)";
+            text.textContent = "🟢 Web Operativa";
             text.style.color = "#2e7d32";
-            text.style.fontWeight = "bold";
         }
     }
 }
 
-function toggleAdmin(show){
-    if(show){ 
-        document.getElementById('login-panel').classList.add('hidden'); 
-        document.getElementById('public-admin-title').classList.add('hidden'); 
-        document.getElementById('admin-panel').classList.remove('hidden'); 
-    }
-}
-
+// --- FUNCIONES DE ADMINISTRACIÓN Y LISTAS ---
 async function loadAdminData() {
     const d = await readData(); if(!d)return;
     const set=(i,v)=>{const e=document.getElementById(i);if(e)e.value=v||''};
@@ -421,13 +448,12 @@ function setupAdminListeners() {
 }
 
 // --- GESTIÓN DE PROYECTOS (ADMIN) ---
-
 function setupProjectManager(allMembers) {
     const status=document.getElementById('proj-status');
     const search=document.getElementById('proj-member-search');
     const res=document.getElementById('proj-member-results');
     
-    status.addEventListener('change',()=>{
+    status?.addEventListener('change',()=>{
         const v=status.value;
         document.getElementById('proj-feedback-section').classList.add('hidden');
         document.getElementById('proj-participants-section').classList.add('hidden');
@@ -435,7 +461,7 @@ function setupProjectManager(allMembers) {
         else if(v==='Cancelado')document.getElementById('proj-feedback-section').classList.remove('hidden');
     });
 
-    search.addEventListener('input',(e)=>{
+    search?.addEventListener('input',(e)=>{
         const t=e.target.value.toLowerCase(); if(t.length<2){res.style.display='none';return}
         const m=allMembers.filter(x=>x.name.toLowerCase().includes(t));
         res.innerHTML='';
@@ -450,16 +476,19 @@ function setupProjectManager(allMembers) {
         } else res.style.display='none';
     });
 
-    document.getElementById('proj-add-external').onclick=()=>{
-        const n=document.getElementById('proj-external-name').value.trim();
-        if(n){addParticipant({id:Date.now(),name:n,role:'Externo',type:'external'});document.getElementById('proj-external-name').value='';}
-    };
+    const addExtBtn = document.getElementById('proj-add-external');
+    if(addExtBtn) {
+        addExtBtn.onclick=()=>{
+            const n=document.getElementById('proj-external-name').value.trim();
+            if(n){addParticipant({id:Date.now(),name:n,role:'Externo',type:'external'});document.getElementById('proj-external-name').value='';}
+        };
+    }
 
     window.addParticipant=(p)=>{if(tempParticipants.some(x=>x.name===p.name))return; tempParticipants.push(p); renderParts();};
     window.removeParticipant=(n)=>{tempParticipants=tempParticipants.filter(p=>p.name!==n); renderParts();};
     
     function renderParts(){
-        const l=document.getElementById('proj-participants-list'); l.innerHTML='';
+        const l=document.getElementById('proj-participants-list'); if(!l) return; l.innerHTML='';
         tempParticipants.forEach(p=>{
             const s=document.createElement('span'); s.style.cssText=`padding:5px 10px;border-radius:15px;font-size:0.85rem;display:flex;align-items:center;gap:5px;${p.type==='member'?'background:#e3f2fd;color:#0d47a1':'background:#eee;color:#444'}`;
             s.innerHTML=`${p.name} <small>(${p.role||''})</small> <span onclick="removeParticipant('${p.name}')" style="cursor:pointer;font-weight:bold">&times;</span>`;
@@ -467,32 +496,38 @@ function setupProjectManager(allMembers) {
         });
     }
 
-    document.getElementById('add-proj').onclick=async()=>{
-        const btn=document.getElementById('add-proj'); btn.disabled=true; btn.textContent='Guardando...';
-        const t=document.getElementById('proj-title').value; if(!t){alert('Falta título'); btn.disabled=false; return;}
-        
-        const f=document.getElementById('proj-gallery-files');
-        if(f.files.length){ for(let file of f.files){const u=await uploadImageToStorage(file,'proyectos'); if(u)tempGallery.push(u);} }
+    const saveProjBtn = document.getElementById('add-proj');
+    if(saveProjBtn) {
+        saveProjBtn.onclick=async()=>{
+            const btn=document.getElementById('add-proj'); btn.disabled=true; btn.textContent='Guardando...';
+            const t=document.getElementById('proj-title').value; if(!t){alert('Falta título'); btn.disabled=false; return;}
+            
+            const f=document.getElementById('proj-gallery-files');
+            if(f.files.length){ for(let file of f.files){const u=await uploadImageToStorage(file,'proyectos'); if(u)tempGallery.push(u);} }
 
-        const pl={title:t, desc:document.getElementById('proj-desc').value, date:document.getElementById('proj-date').value, status:status.value, feedback:document.getElementById('proj-feedback').value, participants:tempParticipants, gallery:tempGallery};
-        
-        let err=null;
-        if(currentEditId) { const r=await supabase.from('projects').update(pl).eq('id',currentEditId); err=r.error; }
-        else { const r=await supabase.from('projects').insert([{...pl, id:Date.now().toString()}]); err=r.error; }
+            const pl={title:t, desc:document.getElementById('proj-desc').value, date:document.getElementById('proj-date').value, status:status.value, feedback:document.getElementById('proj-feedback').value, participants:tempParticipants, gallery:tempGallery};
+            
+            let err=null;
+            if(currentEditId) { const r=await supabase.from('projects').update(pl).eq('id',currentEditId); err=r.error; }
+            else { const r=await supabase.from('projects').insert([{...pl, id:Date.now().toString()}]); err=r.error; }
 
-        if(err) alert('Error guardando'); else { alert('Guardado'); resetProj(); loadAdminLists(); }
-        btn.disabled=false; btn.textContent='Guardar Proyecto';
-    };
-    document.getElementById('cancel-proj').onclick=resetProj;
+            if(err) alert('Error guardando'); else { alert('Guardado'); resetProj(); loadAdminLists(); }
+            btn.disabled=false; btn.textContent='Guardar Proyecto';
+        };
+    }
+    const cancelProjBtn = document.getElementById('cancel-proj');
+    if(cancelProjBtn) cancelProjBtn.onclick=resetProj;
 }
 
 function resetProj(){
     currentEditId=null;
-    ['proj-title','proj-desc','proj-date','proj-feedback','proj-gallery-files','proj-member-search','proj-external-name'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('proj-status').value='En curso';
-    ['proj-feedback-section','proj-participants-section','cancel-proj'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-    document.getElementById('add-proj').textContent='Guardar Proyecto';
-    document.getElementById('proj-gallery-preview').innerHTML=''; tempParticipants=[]; tempGallery=[]; document.getElementById('proj-participants-list').innerHTML='';
+    ['proj-title','proj-desc','proj-date','proj-feedback','proj-gallery-files','proj-member-search','proj-external-name'].forEach(id=>{const el = document.getElementById(id); if(el) el.value=''});
+    const statusEl = document.getElementById('proj-status'); if(statusEl) statusEl.value='En curso';
+    ['proj-feedback-section','proj-participants-section','cancel-proj'].forEach(id=>{const el = document.getElementById(id); if(el) el.classList.add('hidden')});
+    const addProjEl = document.getElementById('add-proj'); if(addProjEl) addProjEl.textContent='Guardar Proyecto';
+    const gpEl = document.getElementById('proj-gallery-preview'); if(gpEl) gpEl.innerHTML=''; 
+    tempParticipants=[]; tempGallery=[]; 
+    const plEl = document.getElementById('proj-participants-list'); if(plEl) plEl.innerHTML='';
 }
 
 function loadProjectToEdit(i){
@@ -530,8 +565,6 @@ function renderAdminGalleryPreview(){
     });
 }
 
-// --- CRUD GENÉRICO ---
-
 function setupCrud(pf,tb,fds,fld){
     const add=document.getElementById(`add-${pf}`), can=document.getElementById(`cancel-${pf}`); if(!add)return;
     add.onclick=async()=>{
@@ -547,7 +580,7 @@ function setupCrud(pf,tb,fds,fld){
         if(r.error)alert('Error'); else {alert('Guardado'); resetForm(pf,fds); loadAdminLists();}
         add.disabled=false; add.textContent=currentEditId?'Actualizar':'Agregar';
     };
-    can.onclick=()=>resetForm(pf,fds);
+    if(can) can.onclick=()=>resetForm(pf,fds);
 }
 
 function resetForm(pf,fds){
@@ -556,8 +589,7 @@ function resetForm(pf,fds){
     if(add)add.textContent='Agregar'; if(can)can.classList.add('hidden');
 }
 
-// --- CARGA DE LISTAS ADMIN (CORREGIDO) ---
-
+// --- CARGA DE LISTAS ADMIN ---
 async function loadAdminLists() {
     const d = await readData(); if(!d) return;
     const sm = document.getElementById('search-mem');
@@ -575,25 +607,19 @@ async function loadAdminLists() {
         c.innerHTML = it.length ? '' : '<p class="muted">Sin registros.</p>';
         it.forEach(x => {
             const div = document.createElement('div'); div.className = 'card'; div.style.cssText = 'padding:10px 15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;';
-            
             let thumb = ''; 
             const imgPath = x.photo || x.image;
             if((tb==='members'||tb==='news') && imgPath) thumb = `<img src="${imgPath}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;margin-right:10px;">`;
-            
             div.innerHTML = `<div style="display:flex;align-items:center;">${thumb}<b>${escapeHtml(x[lbl])}</b></div><div><button class="btn edit-btn" style="padding:4px 8px;font-size:0.8rem;margin-right:5px;">✏️</button><button class="btn del-btn" style="padding:4px 8px;font-size:0.8rem;background:#d32f2f;">🗑️</button></div>`;
-            
             div.querySelector('.del-btn').onclick = async () => { 
-                if(confirm('¿Borrar este registro y sus archivos permanentemente?')) { 
+                if(confirm('¿Borrar este registro permanentemente?')) { 
                     if(x.image) await deleteFileFromStorage(x.image);
                     if(x.photo) await deleteFileFromStorage(x.photo);
-                    if(x.gallery && Array.isArray(x.gallery)) {
-                        for(let url of x.gallery) await deleteFileFromStorage(url);
-                    }
+                    if(x.gallery && Array.isArray(x.gallery)) for(let url of x.gallery) await deleteFileFromStorage(url);
                     await supabase.from(tb).delete().eq('id', x.id); 
                     loadAdminLists(); 
                 } 
             };
-            
             div.querySelector('.edit-btn').onclick = () => {
                 if (tb === 'projects') loadProjectToEdit(x);
                 else { 
@@ -613,94 +639,49 @@ async function loadAdminLists() {
 
     renderList('news-admin-list', d.news, 'title', 'news', 'news', ['title', 'body', 'date', 'image']);
     renderList('event-admin-list', d.events, 'title', 'events', 'evt', ['title', 'desc', 'date']);
-    
     const st = sm ? sm.value.toLowerCase() : '';
     renderList('member-admin-list', st ? d.members.filter(m => m.name.toLowerCase().includes(st)) : d.members, 'name', 'members', 'mem', ['name', 'role', 'email', 'phone', 'photo']);
     renderList('proj-admin-list', d.projects, 'title', 'projects', 'proj', []);
+
+    // --- RENDERIZAR BANDEJA DE MENSAJES ---
+    const cContainer = document.getElementById('contacts-admin-list');
+    if (cContainer && d.contacts) {
+        cContainer.innerHTML = d.contacts.length ? '' : '<p class="muted">No hay mensajes en la bandeja.</p>';
+        d.contacts.forEach(msg => {
+            const mDiv = document.createElement('div');
+            mDiv.style.cssText = 'background:#f8f9fa; border:1px solid #e1e4e8; border-radius:8px; padding:15px;';
+            const fechaMsg = new Date(msg.date).toLocaleString();
+            mDiv.innerHTML = `
+                <div style="border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <strong style="color:var(--blue-accent); font-size:1.1rem;">👤 ${escapeHtml(msg.name)}</strong><br>
+                        <small>📧 <a href="mailto:${escapeHtml(msg.email)}">${escapeHtml(msg.email)}</a> | 📞 ${escapeHtml(msg.phone || 'Sin teléfono')}</small>
+                    </div>
+                    <small class="muted">📅 ${fechaMsg}</small>
+                </div>
+                <p style="margin:0 0 15px 0; color:#444; white-space:pre-wrap; line-height: 1.5;">${escapeHtml(msg.message)}</p>
+                <button class="btn del-msg-btn" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:6px 12px; font-size:0.85rem;">🗑️ Borrar Mensaje</button>
+            `;
+            mDiv.querySelector('.del-msg-btn').onclick = async () => {
+                if(confirm('¿Eliminar este mensaje permanentemente?')) {
+                    await supabase.from('contacts').delete().eq('id', msg.id);
+                    loadAdminLists(); 
+                }
+            };
+            cContainer.appendChild(mDiv);
+        });
+    }
 }
 
 // --- FUNCIONES COMUNES ---
-
 function escapeHtml(t) { return t ? t.toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])) : ''; }
-
 function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
-
-function bindSidebar() { 
-    const b=document.getElementById('sidebar-toggle'),s=document.getElementById('sidebar'),o=document.getElementById('sidebar-overlay'); 
-    if(b)b.onclick=()=>{s.classList.add('open');o.classList.add('open');};
-    if(o)o.onclick=()=>{s.classList.remove('open');o.classList.remove('open');};
-}
-
-function renderNav() { 
-    const n=document.getElementById('sidebar-nav'); if(!n)return; 
-    const l=[{t:'Inicio',h:'index.html'},
-        {t:'Nosotros',h:'about.html'},
-        {t:'Proyectos',h:'projects.html'},
-        {t:'Eventos',h:'events.html'},
-        {t:'Noticias',h:'news.html'},
-        {t:'Transparencia', h:'transparencia.html'},
-        {t:'Galería',h:'gallery.html'},
-        {t:'Integrantes',h:'members.html'},
-        {t:'Contacto',h:'contact.html'}]; 
-    n.innerHTML=''; l.forEach(i=>{const a=document.createElement('a');a.href=i.h;a.textContent=i.t;if(location.pathname.includes(i.h))a.classList.add('active');n.appendChild(a)}); 
-}
-
-function bindContact() { 
-    const f=document.getElementById('contact-form');
-    if(f)f.onsubmit=async e=>{
-        e.preventDefault();
-        await supabase.from('contacts').insert([{id:uid(),name:f['contact-name'].value,email:f['contact-email'].value,phone:f['contact-phone'].value,message:f['contact-message'].value}]);
-        alert('Enviado');f.reset();
-    };
-}
-
+function bindSidebar() { const b=document.getElementById('sidebar-toggle'),s=document.getElementById('sidebar'),o=document.getElementById('sidebar-overlay'); if(b)b.onclick=()=>{s.classList.add('open');o.classList.add('open');}; if(o)o.onclick=()=>{s.classList.remove('open');o.classList.remove('open');}; }
+function renderNav() { const n=document.getElementById('sidebar-nav'); if(!n)return; const l=[{t:'Inicio',h:'index.html'}, {t:'Nosotros',h:'about.html'}, {t:'Proyectos',h:'projects.html'}, {t:'Eventos',h:'events.html'}, {t:'Noticias',h:'news.html'}, {t:'Transparencia', h:'transparencia.html'}, {t:'Galería',h:'gallery.html'}, {t:'Integrantes',h:'members.html'}, {t:'Contacto',h:'contact.html'}]; n.innerHTML=''; l.forEach(i=>{const a=document.createElement('a');a.href=i.h;a.textContent=i.t;if(location.pathname.includes(i.h))a.classList.add('active');n.appendChild(a)}); }
+function bindContact() { const f=document.getElementById('contact-form'); if(f)f.onsubmit=async e=>{ e.preventDefault(); await supabase.from('contacts').insert([{id:uid(),name:f['contact-name'].value,email:f['contact-email'].value,phone:f['contact-phone'].value,message:f['contact-message'].value}]); alert('Enviado');f.reset(); }; }
 function bindNewsModal(){document.getElementById('news-modal')?.addEventListener('click',e=>{if(e.target===document.getElementById('news-modal'))document.getElementById('news-modal').classList.add('hidden')})}
-
-function openNewsModal(t,d,b,i){
-    const m=document.getElementById('news-modal'),mb=document.getElementById('news-modal-body');if(!m||!mb)return;
-    mb.innerHTML=`<div style="display:flex;flex-direction:column;gap:16px;">${i?`<img src="${i}" style="width:100%;height:300px;object-fit:cover;border-radius:12px;">`:''}<div><h2 style="color:#013a63;margin:0 0 8px 0;">${escapeHtml(t)}</h2><small style="color:#ff6b6b;font-weight:600;">${d}</small></div><div style="color:#013a63;line-height:1.8;">${escapeHtml(b).replace(/\n/g,'<br>')}</div></div>`;
-    m.classList.remove('hidden');
-}
-
+function openNewsModal(t,d,b,i){ const m=document.getElementById('news-modal'),mb=document.getElementById('news-modal-body');if(!m||!mb)return; mb.innerHTML=`<div style="display:flex;flex-direction:column;gap:16px;">${i?`<img src="${i}" style="width:100%;height:300px;object-fit:cover;border-radius:12px;">`:''}<div><h2 style="color:#013a63;margin:0 0 8px 0;">${escapeHtml(t)}</h2><small style="color:#ff6b6b;font-weight:600;">${d}</small></div><div style="color:#013a63;line-height:1.8;">${escapeHtml(b).replace(/\n/g,'<br>')}</div></div>`; m.classList.remove('hidden'); }
 function closeNewsModal(){document.getElementById('news-modal')?.classList.add('hidden')}
-
-function initCarousel(n){
-    const c=document.getElementById('news-carousel');if(!c)return;
-    if(!n.length){c.innerHTML='<div class="card"><p class="muted">Sin noticias.</p></div>';return}
-    c.innerHTML=''; const ct=document.createElement('div'); ct.className='carousel-slides';
-    n.forEach((x,i)=>{
-        const s=document.createElement('div'); s.className=`carousel-slide ${i===0?'active':''}`;
-        s.style.backgroundImage=x.image?`url('${x.image}')`:'linear-gradient(135deg,#04293a,#0d5d9e)';
-        s.innerHTML=`<div class="carousel-caption"><div class="content"><h3>${escapeHtml(x.title)}</h3><small>${x.date}</small></div></div>`;
-        ct.appendChild(s);
-    });
-    c.appendChild(ct); let idx=0;
-    setInterval(()=>{ct.children[idx].classList.remove('active');idx=(idx+1)%ct.children.length;ct.children[idx].classList.add('active')},5000);
-}
-
+function initCarousel(n){ const c=document.getElementById('news-carousel');if(!c)return; if(!n.length){c.innerHTML='<div class="card"><p class="muted">Sin noticias.</p></div>';return} c.innerHTML=''; const ct=document.createElement('div'); ct.className='carousel-slides'; n.forEach((x,i)=>{ const s=document.createElement('div'); s.className=`carousel-slide ${i===0?'active':''}`; s.style.backgroundImage=x.image?`url('${x.image}')`:'linear-gradient(135deg,#04293a,#0d5d9e)'; s.innerHTML=`<div class="carousel-caption"><div class="content"><h3>${escapeHtml(x.title)}</h3><small>${x.date}</small></div></div>`; ct.appendChild(s); }); c.appendChild(ct); let idx=0; setInterval(()=>{ct.children[idx].classList.remove('active');idx=(idx+1)%ct.children.length;ct.children[idx].classList.add('active')},5000); }
 function openPhotoViewer(s){const p=document.getElementById('photo-viewer'),i=document.getElementById('photo-viewer-img');if(p&&i){i.src=s;p.classList.add('open')}}
-
-function renderMembersByRole(m){
-    const c=document.getElementById('members-list');if(!c)return; c.innerHTML='';
-    const q=[{title:'Presidente y Vicepresidenta',roles:['Presidente','Presidenta','Vicepresidente','Vicepresidenta','Vicepresedenta']},{title:'Logística',roles:['Logistica','Logística']},{title:'Publirelacionista',roles:['Publirelacionista','Relaciones Públicas','Relaciones Publicas']},{title:'Tesorería',roles:['Tesorero','Tesorería','Tesorera']},{title:'Secretaria',roles:['Secretaria','Secretario']},{title:'Vocales',roles:['Vocal','Vocales']},{title:'Colaboradores',roles:['Colaborador','Colaboradores']}];
-    const cr=(x)=>{
-        const d=document.createElement('div'); d.className='member-card';
-        const i=x.photo||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Crect width='220' height='220' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E";
-        d.innerHTML=`<img src="${i}" onclick="openPhotoViewer('${i}')"><div><h4>${escapeHtml(x.name)}</h4><p class="muted">${escapeHtml(x.role)}</p><p>${escapeHtml(x.email)}</p></div>`;
-        return d;
-    };
-    const norm=r=>(r||'').trim().toLowerCase(); const u=new Set();
-    q.forEach(g=>{
-        const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>${g.title}</h3>`;
-        const d=document.createElement('div'); d.className='quadrant-grid';
-        const mat=m.filter(x=>g.roles.map(norm).includes(norm(x.role)));
-        mat.forEach(x=>{d.appendChild(cr(x));u.add(x.id)});
-        if(mat.length){s.appendChild(d); c.appendChild(s);}
-    });
-    const oth=m.filter(x=>!u.has(x.id));
-    if(oth.length){
-        const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>Otros</h3>`;
-        const d=document.createElement('div'); d.className='quadrant-grid';
-        oth.forEach(x=>d.appendChild(cr(x))); s.appendChild(d); c.appendChild(s);
-    }
-}
+function renderMembersByRole(m){ const c=document.getElementById('members-list');if(!c)return; c.innerHTML=''; const q=[{title:'Presidente y Vicepresidenta',roles:['Presidente','Presidenta','Vicepresidente','Vicepresidenta','Vicepresedenta']},{title:'Logística',roles:['Logistica','Logística']},{title:'Publirelacionista',roles:['Publirelacionista','Relaciones Públicas','Relaciones Publicas']},{title:'Tesorería',roles:['Tesorero','Tesorería','Tesorera']},{title:'Secretaria',roles:['Secretaria','Secretario']},{title:'Vocales',roles:['Vocal','Vocales']},{title:'Colaboradores',roles:['Colaborador','Colaboradores']}]; const cr=(x)=>{ const d=document.createElement('div'); d.className='member-card'; const i=x.photo||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Crect width='220' height='220' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E"; d.innerHTML=`<img src="${i}" onclick="openPhotoViewer('${i}')"><div><h4>${escapeHtml(x.name)}</h4><p class="muted">${escapeHtml(x.role)}</p><p>${escapeHtml(x.email)}</p></div>`; return d; }; const norm=r=>(r||'').trim().toLowerCase(); const u=new Set(); q.forEach(g=>{ const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>${g.title}</h3>`; const d=document.createElement('div'); d.className='quadrant-grid'; const mat=m.filter(x=>g.roles.map(norm).includes(norm(x.role))); mat.forEach(x=>{d.appendChild(cr(x));u.add(x.id)}); if(mat.length){s.appendChild(d); c.appendChild(s);} }); const oth=m.filter(x=>!u.has(x.id)); if(oth.length){ const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>Otros</h3>`; const d=document.createElement('div'); d.className='quadrant-grid'; oth.forEach(x=>d.appendChild(cr(x))); s.appendChild(d); c.appendChild(s); } }

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SysAdmin - AESFACT</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+    <style>
+        /* Paleta Empresarial (Dark Theme con Acentos Verdes) */
+        :root {
+            --bg-body: #0d1117;       /* Negro/Gris muy oscuro */
+            --bg-surface: #161b22;    /* Gris oscuro para tarjetas */
+            --bg-elevated: #21262d;   /* Gris medio para hover/elementos */
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            
+            /* Colores de estado corporativos */
+            --sys-green-main: #238636; /* Verde GitHub/Supabase */
+            --sys-green-hover: #2ea043;
+            --sys-green-bg: rgba(35, 134, 54, 0.15);
+            
+            --sys-blue: #2f81f7;
+            --sys-blue-bg: rgba(47, 129, 247, 0.1);
+            
+            --sys-red: #f85149;
+            --sys-red-bg: rgba(248, 81, 73, 0.1);
+            
+            --sys-orange: #d29922;
+            --sys-orange-bg: rgba(210, 153, 34, 0.1);
+        }
+
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-primary); 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .sys-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        
+        .sys-header { 
+            display: flex; justify-content: space-between; align-items: flex-end; 
+            border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 20px; margin-bottom: 30px; 
+        }
+        
+        .sys-header h1 { margin: 0; font-size: 1.5rem; font-weight: 600; color: #ffffff; display: flex; align-items: center; }
+        
+        /* Indicador Led de Sistema Online */
+        .status-led {
+            display: inline-block; width: 10px; height: 10px;
+            background-color: var(--sys-green-hover); border-radius: 50%;
+            margin-right: 12px; box-shadow: 0 0 8px var(--sys-green-hover);
+            animation: pulse-green 2.5s infinite;
+        }
+
+        .sys-header .badge-sysadmin {
+            background-color: var(--sys-red-bg); color: var(--sys-red);
+            border: 1px solid rgba(248, 81, 73, 0.4); padding: 2px 8px;
+            border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .btn-exit {
+            background: var(--bg-elevated); color: var(--text-primary); 
+            border: 1px solid var(--border-color); padding: 6px 14px; 
+            border-radius: 6px; text-decoration: none; font-size: 0.85rem; 
+            font-weight: 500; transition: 0.2s;
+        }
+        .btn-exit:hover { background: #30363d; border-color: #8b949e; }
+
+        /* Sistema de Pestañas */
+        .sys-tabs { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); }
+        .tab-btn { 
+            background: transparent; border: none; border-bottom: 2px solid transparent;
+            padding: 10px 16px; font-weight: 500; color: var(--text-secondary); 
+            cursor: pointer; transition: 0.2s; font-size: 0.9rem;
+        }
+        .tab-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+        .tab-btn.active { 
+            color: var(--text-primary); border-bottom-color: var(--sys-green-main); font-weight: 600;
+        }
+        
+        .sys-section { display: none; }
+        .sys-section.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+
+        .section-header { margin-bottom: 20px; }
+        .section-header h3 { margin: 0 0 5px 0; color: #fff; font-size: 1.2rem; font-weight: 600; }
+        .section-header p { margin: 0; color: var(--text-secondary); font-size: 0.85rem; }
+
+        /* Tablas de Datos Estructuradas */
+        .table-container {
+            background: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: 6px; overflow: hidden;
+        }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
+        .data-table th, .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+        .data-table th { background: rgba(255,255,255,0.02); color: var(--text-secondary); font-weight: 600; }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* Elementos UI Formulario */
+        select.sys-select, input.sys-select { 
+            background: var(--bg-body); color: var(--text-primary); padding: 6px 10px; 
+            border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.85rem; outline: none;
+        }
+        select.sys-select:focus, input.sys-select:focus { 
+            border-color: var(--sys-green-main); 
+            box-shadow: 0 0 8px rgba(35, 134, 54, 0.2);
+        }
+        
+        /* 🔥 Botones de Acción Verdes */
+        .btn {
+            background-color: var(--sys-green-main) !important; 
+            color: #ffffff !important; 
+            border: 1px solid #2ea043 !important; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            transition: 0.2s ease;
+            box-shadow: 0 0 10px rgba(35, 134, 54, 0.1);
+        }
+        .btn:hover { 
+            background-color: var(--sys-green-hover) !important; 
+            box-shadow: 0 0 15px rgba(35, 134, 54, 0.4); 
+        }
+        
+        /* 🔥 Botón de Sincronizar Resaltado Sutilmente */
+        .btn-refresh { 
+            background: rgba(46, 160, 67, 0.1); /* Fondo verde muy translúcido */
+            color: var(--sys-green-hover);      /* Texto verde brillante */
+            border: 1px solid rgba(46, 160, 67, 0.3); /* Borde verde suave */
+            padding: 6px 14px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 0.85rem; 
+            font-weight: 600;
+            transition: all 0.2s ease; 
+        }
+        .btn-refresh:hover { 
+            background: rgba(46, 160, 67, 0.2); 
+            color: #fff;
+            border-color: var(--sys-green-main);
+            box-shadow: 0 0 10px rgba(46, 160, 67, 0.2);
+        }
+
+        /* Badges Funcionales */
+        .badge-status { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .status-activo { background: var(--sys-green-bg); color: var(--sys-green-hover); border: 1px solid rgba(46, 160, 67, 0.4); }
+        .status-pausado { background: var(--sys-red-bg); color: var(--sys-red); border: 1px solid rgba(248, 81, 73, 0.4); }
+        
+        .badge-action { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; font-family: ui-monospace, SFMono-Regular, monospace; }
+        .act-INSERT { background: var(--sys-blue-bg); color: var(--sys-blue); }
+        .act-UPDATE { background: var(--sys-orange-bg); color: var(--sys-orange); }
+        .act-DELETE { background: var(--sys-red-bg); color: var(--sys-red); }
+
+        /* Matriz de Permisos */
+        .perm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+        .perm-card { 
+            border: 1px solid var(--border-color); border-radius: 6px; 
+            padding: 20px; background: var(--bg-surface); 
+        }
+        .perm-card h4 { margin: 0 0 15px 0; color: #fff; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        
+        .checkbox-group { display: flex; flex-direction: column; gap: 8px; }
+        .checkbox-label { 
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem; cursor: pointer; 
+            color: var(--text-primary); padding: 4px 0;
+        }
+        
+        /* Checkboxes Personalizados en Verde */
+        .checkbox-label input[type="checkbox"] { 
+            appearance: none; background-color: var(--bg-body); margin: 0; font: inherit; 
+            color: currentColor; width: 1.15em; height: 1.15em; border: 1px solid var(--border-color); 
+            border-radius: 4px; display: grid; place-content: center; cursor: pointer; transition: 0.2s;
+        }
+        .checkbox-label input[type="checkbox"]::before {
+            content: ""; width: 0.65em; height: 0.65em; transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em var(--sys-green-main);
+            background-color: var(--sys-green-main);
+            transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        .checkbox-label input[type="checkbox"]:hover { border-color: var(--text-secondary); }
+        .checkbox-label input[type="checkbox"]:checked::before { transform: scale(1); }
+        .checkbox-label input[type="checkbox"]:checked { border-color: var(--sys-green-main); }
+
+        /* Animaciones */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(46, 160, 67, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(46, 160, 67, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(46, 160, 67, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sys-container">
+        <div class="sys-header">
+            <div>
+                <h1><span class="status-led"></span>Panel de Superusuario <span class="badge-sysadmin">SYSADMIN_ROOT</span></h1>
+                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; margin-left: 22px;">Configuración avanzada de infraestructura y accesos AESFACT</div>
+            </div>
+            <a href="admin.html" class="btn-exit">Volver al Dashboard</a>
+        </div>
+
+        <div class="sys-tabs">
+            <button class="tab-btn active" onclick="switchTab('users')">Gestión de Usuarios</button>
+            <button class="tab-btn" onclick="switchTab('permissions')">Políticas de Acceso (RBAC)</button>
+            <button class="tab-btn" onclick="switchTab('logs')">Auditoría del Sistema</button>
+        </div>
+
+        <div id="users-section" class="sys-section active">
+            <div class="section-header">
+                <h3>Identidades Registradas</h3>
+                <p>Administra los roles operativos y bloquea cuentas en caso de brechas de seguridad.</p>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Identificador (Email)</th>
+                            <th>Rol Operativo</th>
+                            <th>Estado de Cuenta</th>
+                            <th style="width: 100px;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr><td colspan="4" style="text-align:center;">Recuperando identidades...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="permissions-section" class="sys-section">
+            <div class="section-header">
+                <h3>Módulos por Rol Operativo</h3>
+                <p>Configura las vistas y accesos permitidos para cada rol dentro del panel administrativo general.</p>
+            </div>
+            
+            <div id="permissions-grid" class="perm-grid">
+                <p style="color: var(--text-secondary);">Recuperando matriz de políticas...</p>
+            </div>
+        </div>
+
+        <div id="logs-section" class="sys-section">
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div>
+                    <h3>Registro de Eventos (Logs)</h3>
+                    <p>Historial inmutable de operaciones DML (Insert, Update, Delete) en las tablas supervisadas.</p>
+                </div>
+                <button onclick="loadLogs()" class="btn-refresh">↻ Sincronizar</button>
+            </div>
+            
+            <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+                <table class="data-table" style="margin-top: 0;">
+                    <thead style="position: sticky; top: 0; background: var(--bg-surface); z-index: 10; box-shadow: 0 1px 0 var(--border-color);">
+                        <tr>
+                            <th>Marca de Tiempo</th>
+                            <th>Operador</th>
+                            <th>Evento</th>
+                            <th>Tabla Afectada</th>
+                            <th>Dirección IP</th>
+                            <th>Referencia ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <tr><td colspan="6" style="text-align:center;">Extrayendo registros del servidor...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/sysadmin.js"></script>
+</body>
+</html>

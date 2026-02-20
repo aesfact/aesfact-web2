@@ -11,14 +11,27 @@ let allTransactions = [];
 let financeChart = null;
 let currentEditId = null; 
 
-// --- INICIALIZACIÓN ---
+// --- INICIALIZACIÓN SEGURA ---
 document.addEventListener('DOMContentLoaded', async () => {
-    if (sessionStorage.getItem('aesfact_session') !== 'active') {
+    
+    // 1. Verificar sesión real de Supabase (Ya no usamos el sessionStorage inseguro)
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
         alert('Acceso denegado. Debes iniciar sesión como Admin.');
         window.location.href = 'admin.html';
         return;
     }
 
+    // 2. Verificar que tenga permiso de "finanzas" en su lista
+    const permsRaw = sessionStorage.getItem('aesfact_permissions');
+    if (!permsRaw || !JSON.parse(permsRaw).includes('finanzas')) {
+        alert('⛔ Acceso Restringido: Tu rol no tiene permisos de Tesorería.');
+        window.location.href = 'admin.html';
+        return;
+    }
+
+    // 3. Cargar datos si pasó la seguridad
     await cargarProyectos();
     await cargarFinanzas();
 
@@ -26,7 +39,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const hoy = new Date();
     document.getElementById('f-date').valueAsDate = hoy;
     
-    // Fechas por defecto para reportes (Inicio de mes hasta hoy)
     document.getElementById('rep-end').valueAsDate = hoy;
     const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
     document.getElementById('rep-start').valueAsDate = primerDia;

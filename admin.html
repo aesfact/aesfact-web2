@@ -94,6 +94,7 @@
 
       <div class="admin-layout">
         <nav class="admin-nav">
+          <a href="sysadmin.html" id="btn-sysadmin-link" class="hidden" style="background-color: #013a63; color: white; border-left: 4px solid #ff6b6b;">⚡ God Mode (SysAdmin)</a>
           <a href="#sec-about">Nosotros</a>
           <a href="#sec-projects">Proyectos</a>
           <a href="#sec-events">Eventos</a>
@@ -101,6 +102,7 @@
           <a href="finanzas.html" style="background-color: #e8f5e9; color: #2e7d32; font-weight: bold;">💰 Gestión Financiera</a>
           <a href="#sec-members">Integrantes</a>
           <a href="#sec-aesfact">AESFACT</a>
+          <a href="#sec-contacts">📩 Mensajes</a>
         </nav>
 
         <div class="admin-content">
@@ -223,6 +225,13 @@
             <input id="aesfact-image-url" placeholder="URL Imagen principal">
             <input id="aesfact-image-file" type="file" accept="image/*">
             <button id="save-aesfact" class="btn">Guardar AESFACT</button>
+          </section>
+
+          <section id="sec-contacts" class="admin-section card">
+            <h3>Bandeja de Mensajes</h3>
+            <p class="muted">Mensajes enviados por los estudiantes desde el formulario de la web.</p>
+            <div id="contacts-admin-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
+                </div>
           </section>
 
         </div>
