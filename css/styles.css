@@ -508,3 +508,68 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue-lig
     margin-top: 10px;
     line-height: 1.6;
 }
+
+
+/* =========================================
+   MEJORAS PREMIUM PARA FORMULARIOS (MODALES)
+   ========================================= */
+
+/* 1. Grid para agrupar inputs cortos lado a lado */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 5px;
+}
+
+@media (max-width: 600px) {
+    .form-grid { 
+        grid-template-columns: 1fr; /* En celulares vuelve a ser una sola columna */
+    }
+}
+
+/* 2. Diseño moderno para subir imágenes (Dropzone) */
+.file-upload-wrapper {
+    position: relative;
+    border: 2px dashed var(--blue-light);
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    background: rgba(13, 93, 158, 0.03);
+    transition: all 0.3s ease;
+    margin: 15px 0;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.file-upload-wrapper:hover {
+    background: rgba(13, 93, 158, 0.08);
+    border-color: var(--blue-accent);
+    transform: translateY(-2px);
+}
+
+/* Ocultamos el input feo por defecto, pero lo dejamos encima para que funcione el clic */
+.file-upload-wrapper input[type="file"] {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    opacity: 0; cursor: pointer;
+    margin: 0; padding: 0;
+}
+
+/* Textos falsos que se ven bonitos */
+.file-upload-wrapper::before {
+    content: '📸 Haz clic aquí para seleccionar una imagen';
+    display: block;
+    color: var(--blue-accent);
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.file-upload-wrapper::after {
+    content: 'Formatos recomendados: JPG, PNG o WEBP (Max 2MB)';
+    display: block;
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 8px;
+    font-weight: 500;
+}
