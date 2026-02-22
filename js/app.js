@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderPublic(); 
     bindSidebar();
     renderNav();
-    bindContact();
     bindNewsModal();
     
     // 🔥 EL EASTER EGG PRO (3 CLICS RÁPIDOS) 🔥
@@ -830,32 +829,11 @@ async function loadAdminLists() {
 
     // --- RENDERIZAR BANDEJA DE MENSAJES ---
     const cContainer = document.getElementById('contacts-admin-list');
-    if (cContainer && d.contacts) {
-        cContainer.innerHTML = d.contacts.length ? '' : '<p class="muted">No hay mensajes en la bandeja.</p>';
-        d.contacts.forEach(msg => {
-            const mDiv = document.createElement('div');
-            mDiv.style.cssText = 'background:#f8f9fa; border:1px solid #e1e4e8; border-radius:8px; padding:15px;';
-            const fechaMsg = new Date(msg.date).toLocaleString();
-            mDiv.innerHTML = `
-                <div style="border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-                    <div>
-                        <strong style="color:var(--blue-accent); font-size:1.1rem;">👤 ${escapeHtml(msg.name)}</strong><br>
-                        <small>📧 <a href="mailto:${escapeHtml(msg.email)}">${escapeHtml(msg.email)}</a> | 📞 ${escapeHtml(msg.phone || 'Sin teléfono')}</small>
-                    </div>
-                    <small class="muted">📅 ${fechaMsg}</small>
-                </div>
-                <p style="margin:0 0 15px 0; color:#444; white-space:pre-wrap; line-height: 1.5;">${escapeHtml(msg.message)}</p>
-                <button class="btn del-msg-btn" style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2; padding:6px 12px; font-size:0.85rem;">🗑️ Borrar Mensaje</button>
-            `;
-            mDiv.querySelector('.del-msg-btn').onclick = async () => {
-                if(confirm('¿Eliminar este mensaje permanentemente?')) {
-                    await supabase.from('contacts').delete().eq('id', msg.id);
-                    loadAdminLists(); 
-                }
-            };
-            cContainer.appendChild(mDiv);
-        });
+    // --- RENDERIZAR BANDEJA DE MENSAJES (VIA contacto.js) ---
+    if (typeof window.renderContactAdminList === 'function') {
+        window.renderContactAdminList(d.contacts);
     }
+
 }
 
 // --- FUNCIONES COMUNES ---
@@ -863,7 +841,6 @@ function escapeHtml(t) { return t ? t.toString().replace(/[&<>"']/g, m=>({'&':'&
 function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
 function bindSidebar() { const b=document.getElementById('sidebar-toggle'),s=document.getElementById('sidebar'),o=document.getElementById('sidebar-overlay'); if(b)b.onclick=()=>{s.classList.add('open');o.classList.add('open');}; if(o)o.onclick=()=>{s.classList.remove('open');o.classList.remove('open');}; }
 function renderNav() { const n=document.getElementById('sidebar-nav'); if(!n)return; const l=[{t:'Inicio',h:'index.html'}, {t:'Nosotros',h:'about.html'}, {t:'Proyectos',h:'projects.html'}, {t:'Eventos',h:'events.html'}, {t:'Noticias',h:'news.html'}, {t:'Transparencia', h:'transparencia.html'}, {t:'Galería',h:'gallery.html'}, {t:'Integrantes',h:'members.html'}, {t:'Contacto',h:'contact.html'}]; n.innerHTML=''; l.forEach(i=>{const a=document.createElement('a');a.href=i.h;a.textContent=i.t;if(location.pathname.includes(i.h))a.classList.add('active');n.appendChild(a)}); }
-function bindContact() { const f=document.getElementById('contact-form'); if(f)f.onsubmit=async e=>{ e.preventDefault(); await supabase.from('contacts').insert([{id:uid(),name:f['contact-name'].value,email:f['contact-email'].value,phone:f['contact-phone'].value,message:f['contact-message'].value}]); alert('Enviado');f.reset(); }; }
 function bindNewsModal(){document.getElementById('news-modal')?.addEventListener('click',e=>{if(e.target===document.getElementById('news-modal'))document.getElementById('news-modal').classList.add('hidden')})}
 function openNewsModal(t,d,b,i){ const m=document.getElementById('news-modal'),mb=document.getElementById('news-modal-body');if(!m||!mb)return; mb.innerHTML=`<div style="display:flex;flex-direction:column;gap:16px;">${i?`<img src="${i}" style="width:100%;height:300px;object-fit:cover;border-radius:12px;">`:''}<div><h2 style="color:#013a63;margin:0 0 8px 0;">${escapeHtml(t)}</h2><small style="color:#ff6b6b;font-weight:600;">${d}</small></div><div style="color:#013a63;line-height:1.8;">${escapeHtml(b).replace(/\n/g,'<br>')}</div></div>`; m.classList.remove('hidden'); }
 function closeNewsModal(){document.getElementById('news-modal')?.classList.add('hidden')}

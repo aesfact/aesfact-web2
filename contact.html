@@ -22,15 +22,24 @@
 
   <main class="container">
     <section class="card">
-      <h2>Contacto</h2>
+      <h2 style="margin-bottom: 5px;">Contacto</h2>
+      <p class="muted" style="margin-bottom: 20px;">Si tienes dudas sobre nuestros proyectos o quieres ser voluntario, escríbenos.</p>
+      
       <form id="contact-form">
-        <input id="contact-name" placeholder="Nombre" required>
-        <input id="contact-email" type="email" placeholder="Email" required>
-        <input id="contact-phone" placeholder="Teléfono">
-        <textarea id="contact-message" placeholder="Mensaje"></textarea>
-        <button class="btn" type="submit">Enviar</button>
+        <label style="font-size: 0.9rem; font-weight: bold; color: var(--blue-accent);">👤 Nombre Completo <span style="color: red;">*</span></label>
+        <input id="contact-name" placeholder="Ej: Ana López" required>
+        
+        <label style="font-size: 0.9rem; font-weight: bold; color: var(--blue-accent);">📧 Correo Electrónico <span style="color: red;">*</span> <small style="font-weight: normal; color: var(--muted);">(De preferencia institucional)</small></label>
+        <input id="contact-email" type="email" placeholder="codigo@ugb.edu.sv" required>
+        
+        <label style="font-size: 0.9rem; font-weight: bold; color: var(--blue-accent);">📱 Teléfono <small style="font-weight: normal; color: var(--muted);">(Opcional)</small></label>
+        <input id="contact-phone" type="tel" placeholder="Ej: 7000-0000">
+        
+        <label style="font-size: 0.9rem; font-weight: bold; color: var(--blue-accent);">📝 Mensaje o Consulta <span style="color: red;">*</span></label>
+        <textarea id="contact-message" placeholder="¿En qué te podemos ayudar?" rows="4" required></textarea>
+        
+        <button class="btn" type="submit" style="width: 100%; margin-top: 10px;">Enviar Mensaje</button>
       </form>
-      <p id="contact-sent" class="muted"></p>
     </section>
 
     <section class="card social-section">
@@ -66,5 +75,6 @@
 
   <footer class="site-footer"><div class="container"><small>&copy; Asociación de Estudiantes - UGB</small></div></footer>
   <script src="js/app.js"></script>
+  <script src="js/contacto.js"></script>
 </body>
 </html>
