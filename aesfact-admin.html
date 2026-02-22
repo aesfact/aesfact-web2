@@ -53,23 +53,70 @@
 
     <script src="js/app.js"></script>
     <script>
-        // Inicializar Supabase
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // 1. EVENTO PARA PREVISUALIZAR LA IMAGEN
+        document.getElementById('aesfact-image-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.querySelector('.file-upload-wrapper');
+                    wrapper.style.backgroundImage = `url(${e.target.result})`;
+                    wrapper.style.backgroundSize = 'cover';
+                    wrapper.style.backgroundPosition = 'center';
+                    wrapper.style.color = 'transparent';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Verificar permisos
+            if (!window.supabaseClient) window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
             const permsRaw = sessionStorage.getItem('aesfact_permissions');
             if (!permsRaw || !JSON.parse(permsRaw).includes('aesfact')) {
-                alert('⛔ Acceso Restringido: No tienes permisos para gestionar AESFACT.');
-                window.location.href = 'admin.html';
-                return;
+                window.location.href = 'admin.html'; return;
             }
 
-            // Cargar datos de AESFACT
-            const data = await readData();
+            const data = await window.readData();
             if (data && data.aesfact) {
                 document.getElementById('aesfact-year').value = data.aesfact.year || '';
-                // Si hay imagen, mostrarla o algo
+                document.getElementById('aesfact-image-url').value = data.aesfact.image || '';
+                if(data.aesfact.image) {
+                    const wrapper = document.querySelector('.file-upload-wrapper');
+                    wrapper.style.backgroundImage = `url(${data.aesfact.image})`;
+                    wrapper.style.backgroundSize = 'cover';
+                    wrapper.style.backgroundPosition = 'center';
+                    wrapper.style.color = 'transparent';
+                }
+            }
+        });
+
+        // 2. FUNCIÓN DE GUARDADO RESTAURADA
+        document.getElementById('save-aesfact').addEventListener('click', async () => {
+            const btn = document.getElementById('save-aesfact');
+            btn.disabled = true; btn.textContent = 'Guardando...';
+            
+            try {
+                const year = document.getElementById('aesfact-year').value; 
+                let imageUrl = document.getElementById('aesfact-image-url').value;
+                const fileInput = document.getElementById('aesfact-image-file'); 
+
+                if (fileInput.files.length > 0) {
+                    btn.textContent = 'Subiendo imagen...';
+                    const uploadedUrl = await window.uploadImageToStorage(fileInput.files[0], 'aesfact');
+                    if (uploadedUrl) imageUrl = uploadedUrl;
+                }
+
+                btn.textContent = 'Actualizando base de datos...';
+                const { error } = await window.supabaseClient.from('aesfact').upsert({ id: 'aesfact', year: year, image: imageUrl });
+                if(error) throw error;
+                
+                alert('✅ Portada guardada con éxito.');
+            } catch (e) {
+                console.error(e);
+                alert('❌ Error al guardar portada.');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Guardar Portada';
             }
         });
     </script>

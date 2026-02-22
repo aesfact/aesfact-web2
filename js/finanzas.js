@@ -8,34 +8,42 @@ let currentEditId = null;
 
 // --- INICIALIZACIÓN SEGURA ---
 // --- INICIALIZACIÓN SEGURA ---
-document.addEventListener('DOMContentLoaded', async () => {
+// --- INICIALIZACIÓN SEGURA ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Esperar medio segundo para asegurar que app.js ya conectó a Supabase
+    setTimeout(async () => {
+        if (!window.supabaseClient) {
+            console.error("Supabase no cargó a tiempo");
+            return;
+        }
 
-    // 1. Verificar sesión real de Supabase
-    const { data: { session } } = await window.supabaseClient.auth.getSession();
-    if (!session) { // ¡ESTA ERA LA LÍNEA QUE BORRARON POR ACCIDENTE!
-        window.location.href = 'admin.html';
-        return;
-    }
+        // 1. Verificar sesión real de Supabase
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (!session) { 
+            window.location.href = 'admin.html';
+            return;
+        }
 
-    // 2. Verificar que tenga permiso de "finanzas"
-    const permsRaw = sessionStorage.getItem('aesfact_permissions');
-    if (!permsRaw || !JSON.parse(permsRaw).includes('finanzas')) {
-        alert('⛔ Acceso Restringido: Tu rol no tiene permisos de Tesorería.');
-        window.location.href = 'admin.html';
-        return;
-    }
+        // 2. Verificar que tenga permiso de "finanzas" en su lista
+        const permsRaw = sessionStorage.getItem('aesfact_permissions');
+        if (!permsRaw || !JSON.parse(permsRaw).includes('finanzas')) {
+            alert('⛔ Acceso Restringido: Tu rol no tiene permisos de Tesorería.');
+            window.location.href = 'admin.html';
+            return;
+        }
 
-    // 3. Cargar datos si pasó la seguridad
-    await cargarProyectos();
-    await cargarFinanzas();
+        // 3. Cargar datos si pasó la seguridad
+        await cargarProyectos();
+        await cargarFinanzas();
 
-    // Fechas por defecto
-    const hoy = new Date();
-    document.getElementById('f-date').valueAsDate = hoy;
-    
-    document.getElementById('rep-end').valueAsDate = hoy;
-    const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    document.getElementById('rep-start').valueAsDate = primerDia;
+        // Fechas por defecto
+        const hoy = new Date();
+        document.getElementById('f-date').valueAsDate = hoy;
+        
+        document.getElementById('rep-end').valueAsDate = hoy;
+        const primerDia = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        document.getElementById('rep-start').valueAsDate = primerDia;
+    }, 500); // 500 milisegundos de espera mágica
 });
 
 // --- CARGA DE DATOS ---

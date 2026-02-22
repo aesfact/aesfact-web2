@@ -280,5 +280,11 @@
     </div>
 
     <script src="js/sysadmin.js"></script>
+    <script>
+      // Asegurar que el god mode sepa que existe supabaseClient
+      if (!window.supabaseClient && window.supabase) {
+          window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      }
+  </script>
 </body>
 </html>
