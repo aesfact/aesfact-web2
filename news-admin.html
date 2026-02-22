@@ -212,14 +212,15 @@
         });
 
         // 2. FUNCIÓN DE GUARDADO CON SOPORTE PARA STORAGE
+        // --- CRUD DE NOTICIAS CORREGIDO (CON ID Y STORAGE) ---
         async function addOrUpdateNews() {
             const title = document.getElementById('news-title').value.trim();
-            const date = document.getElementById('news-date').value;
+            const dateRaw = document.getElementById('news-date').value;
             const body = document.getElementById('news-body').value.trim();
             let imageUrl = document.getElementById('news-image-url').value.trim();
             const fileInput = document.getElementById('news-image-file');
 
-            if (!title || !date || !body) {
+            if (!title || !dateRaw || !body) {
                 showNotification('Título, fecha y contenido son obligatorios.', 'error');
                 return;
             }
@@ -230,7 +231,7 @@
             btn.textContent = 'Subiendo imagen...';
 
             try {
-                // MAGIA RESTAURADA: Subir el archivo si se seleccionó uno
+                // 1. Subir imagen a Storage
                 if (fileInput.files.length > 0) {
                     const uploadedUrl = await window.uploadImageToStorage(fileInput.files[0], 'noticias');
                     if (uploadedUrl) imageUrl = uploadedUrl;
@@ -238,19 +239,23 @@
 
                 btn.textContent = 'Guardando datos...';
 
-                if (currentEditId) {
-                    const { error } = await window.supabaseClient
-                        .from('news')
-                        .update({ title, date, body, image: imageUrl })
-                        .eq('id', currentEditId);
+                // 2. Armar el paquete de datos seguro
+                const payload = { 
+                    title: title, 
+                    date: dateRaw || '', 
+                    body: body, 
+                    image: imageUrl 
+                };
 
+                // 3. Guardar en Base de Datos
+                if (window.currentEditId) {
+                    const { error } = await window.supabaseClient.from('news').update(payload).eq('id', window.currentEditId);
                     if (error) throw error;
                     showNotification('Noticia actualizada correctamente.');
                 } else {
-                    const { error } = await window.supabaseClient
-                        .from('news')
-                        .insert([{ title, date, body, image: imageUrl }]);
-
+                    // INYECCIÓN DEL ID FALTANTE
+                    payload.id = Date.now().toString(); 
+                    const { error } = await window.supabaseClient.from('news').insert([payload]);
                     if (error) throw error;
                     showNotification('Noticia agregada correctamente.');
                 }
@@ -258,8 +263,8 @@
                 clearNewsForm();
                 await loadAndRenderNews();
             } catch (e) {
-                console.error(e);
-                showNotification('Error al guardar noticia.', 'error');
+                console.error("🚨 Error BD Noticias:", e);
+                showNotification('Error al guardar la noticia. Verifica los datos.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = originalText;
@@ -286,5 +291,5 @@
             currentEditId = null;
         }
 
-        
+
     </script>

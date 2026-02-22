@@ -801,6 +801,7 @@
         });
 
         // 2. FUNCIÓN DE GUARDADO CON SOPORTE PARA STORAGE
+        // --- CRUD DE INTEGRANTES CORREGIDO (CON ID Y STORAGE) ---
         async function addOrUpdateMember() {
             const name = document.getElementById('mem-name').value.trim();
             const role = document.getElementById('mem-role').value.trim();
@@ -820,7 +821,7 @@
             btn.textContent = 'Subiendo foto...';
 
             try {
-                // MAGIA RESTAURADA: Subir el archivo de la foto
+                // 1. Subir foto a Storage
                 if (fileInput.files.length > 0) {
                     const uploadedUrl = await window.uploadImageToStorage(fileInput.files[0], 'integrantes');
                     if (uploadedUrl) photoUrl = uploadedUrl;
@@ -828,19 +829,24 @@
 
                 btn.textContent = 'Guardando datos...';
 
-                if (currentEditId) {
-                    const { error } = await window.supabaseClient
-                        .from('members')
-                        .update({ name, role, email, phone, photo: photoUrl }) // Aquí se inyecta la URL de la foto
-                        .eq('id', currentEditId);
+                // 2. Armar el paquete de datos
+                const payload = { 
+                    name: name, 
+                    role: role, 
+                    email: email, 
+                    phone: phone || '', 
+                    photo: photoUrl 
+                };
 
+                // 3. Guardar en Base de Datos
+                if (window.currentEditId) {
+                    const { error } = await window.supabaseClient.from('members').update(payload).eq('id', window.currentEditId);
                     if (error) throw error;
                     showNotification('Integrante actualizado correctamente.');
                 } else {
-                    const { error } = await window.supabaseClient
-                        .from('members')
-                        .insert([{ name, role, email, phone, photo: photoUrl }]);
-
+                    // INYECCIÓN DEL ID FALTANTE
+                    payload.id = Date.now().toString(); 
+                    const { error } = await window.supabaseClient.from('members').insert([payload]);
                     if (error) throw error;
                     showNotification('Integrante agregado correctamente.');
                 }
@@ -848,8 +854,8 @@
                 clearMemberForm();
                 await loadAndRenderMembers();
             } catch (e) {
-                console.error(e);
-                showNotification('Error al guardar integrante.', 'error');
+                console.error("🚨 Error BD Integrantes:", e);
+                showNotification('Error al guardar el integrante. Verifica los datos.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = originalText;
