@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Nosotros - AESFACT</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+    <style>
+        :root {
+            --dark-blue: #04293a;
+        }
+        body { background-color: #f4f7f6; }
+        .about-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .about-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .about-section {
+            background: white; padding: 30px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px;
+        }
+        .about-section h3 { margin-top: 0; color: var(--dark-blue); }
+        .about-section label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
+        .about-section textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-top: 5px; }
+        .btn { background: var(--dark-blue); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #0d5d9e; }
+    </style>
+</head>
+<body>
+    <div style="background: white; padding: 15px; border-bottom: 1px solid #eee;">
+        <div class="about-container" style="padding: 0; display: flex; justify-content: space-between; align-items: center;">
+            <a href="admin.html" style="text-decoration: none; color: #555; font-weight: bold;">← Volver al Admin</a>
+            <h2 style="margin: 0; color: var(--dark-blue);">Gestión de Nosotros</h2>
+        </div>
+    </div>
+
+    <div class="about-container">
+        <section class="about-section">
+            <h3>Información Institucional</h3>
+            <label>Misión</label>
+            <textarea id="edit-mision" rows="4"></textarea>
+            <label>Visión</label>
+            <textarea id="edit-vision" rows="4"></textarea>
+            <label>Valores (uno por línea)</label>
+            <textarea id="edit-valores" rows="5"></textarea>
+            <label>Política</label>
+            <textarea id="edit-politica" rows="4"></textarea>
+            <label>Objetivos (uno por línea)</label>
+            <textarea id="edit-objetivos" rows="4"></textarea>
+            <label>Objetivos Calidad (uno por línea)</label>
+            <textarea id="edit-objetivos-calidad" rows="4"></textarea>
+            <button id="save-about" class="btn" style="margin-top: 20px;">Guardar Información</button>
+        </section>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Inicializar Supabase
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar permisos
+            const permsRaw = sessionStorage.getItem('aesfact_permissions');
+            if (!permsRaw || !JSON.parse(permsRaw).includes('nosotros')) {
+                alert('⛔ Acceso Restringido: No tienes permisos para gestionar esta sección.');
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            // Cargar datos
+            const data = await readData();
+            if (data) {
+                document.getElementById('edit-mision').value = data.mision || '';
+                document.getElementById('edit-vision').value = data.vision || '';
+                document.getElementById('edit-valores').value = (data.valores || []).join('\n');
+                document.getElementById('edit-politica').value = data.politica || '';
+                document.getElementById('edit-objetivos').value = (data.objetivos || []).join('\n');
+                document.getElementById('edit-objetivos-calidad').value = (data.objetivos_calidad || []).join('\n');
+            }
+
+            // Evento guardar
+            document.getElementById('save-about').addEventListener('click', async () => {
+                const mision = document.getElementById('edit-mision').value.trim();
+                const vision = document.getElementById('edit-vision').value.trim();
+                const valores = document.getElementById('edit-valores').value.split('\n').map(v => v.trim()).filter(v => v);
+                const politica = document.getElementById('edit-politica').value.trim();
+                const objetivos = document.getElementById('edit-objetivos').value.split('\n').map(v => v.trim()).filter(v => v);
+                const objetivos_calidad = document.getElementById('edit-objetivos-calidad').value.split('\n').map(v => v.trim()).filter(v => v);
+
+                try {
+                    await window.supabaseClient.from('config').upsert([
+                        { key: 'mision', value: mision },
+                        { key: 'vision', value: vision },
+                        { key: 'valores', value: JSON.stringify(valores) },
+                        { key: 'politica', value: politica },
+                        { key: 'objetivos', value: JSON.stringify(objetivos) },
+                        { key: 'objetivos_calidad', value: JSON.stringify(objetivos_calidad) }
+                    ], { onConflict: 'key' });
+                    alert('✅ Información guardada correctamente.');
+                } catch (e) {
+                    console.error(e);
+                    alert('❌ Error al guardar.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

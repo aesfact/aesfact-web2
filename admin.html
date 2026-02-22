@@ -7,46 +7,111 @@
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
   <style>
-    #search-mem, #proj-member-search {
-      border: 2px solid var(--blue-light);
-      background-color: #f0f8ff;
-      font-weight: 600;
-      color: var(--blue-accent);
+    :root {
+        --dark-blue: #04293a;
+        --blue-accent: #013a63;
+        --blue-light: #0d5d9e;
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-muted: #94a3b8;
+        --border-color: #e2e8f0;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .pulse-animation {
-      animation: pulse-blue 1.5s infinite;
+
+    * {
+        box-sizing: border-box;
     }
-    @keyframes pulse-blue {
-      0% { box-shadow: 0 0 0 0 rgba(13, 93, 158, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(13, 93, 158, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(13, 93, 158, 0); }
+
+    body.admin {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, var(--bg-primary), #f1f5f9);
+        color: var(--text-primary);
+        line-height: 1.6;
+        margin: 0;
+        min-height: 100vh;
     }
-    /* Estilos para el Switch de Mantenimiento */
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    #public-admin-title {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--text-primary);
+        font-size: 2rem;
+        font-weight: 700;
+        position: relative;
+        padding-bottom: 1rem;
+    }
+
+    #public-admin-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--blue-accent), var(--blue-light));
+        border-radius: 2px;
+    }
+
+    /* Switch de mantenimiento mejorado */
     .switch-container {
         display: flex;
         align-items: center;
-        background: #fff3e0;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid #ffe0b2;
-        margin-bottom: 20px;
+        background: var(--bg-secondary);
+        padding: 1.5rem;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-md);
+        margin-bottom: 2rem;
+        transition: var(--transition);
     }
+
+    .switch-container:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+    }
+
     .switch-label {
         position: relative;
         display: inline-block;
         width: 50px;
         height: 24px;
-        margin-right: 15px;
+        margin-right: 1rem;
     }
-    .switch-label input { opacity: 0; width: 0; height: 0; }
+
+    .switch-label input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
     .slider {
         position: absolute;
         cursor: pointer;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #ccc;
-        transition: .4s;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        transition: var(--transition);
         border-radius: 34px;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
     }
+
     .slider:before {
         position: absolute;
         content: "";
@@ -54,13 +119,258 @@
         width: 16px;
         left: 4px;
         bottom: 4px;
-        background-color: white;
-        transition: .4s;
+        background: white;
+        transition: var(--transition);
         border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
-    input:checked + .slider { background-color: #d32f2f; } 
-    input:checked + .slider:before { transform: translateX(26px); }
-    #maint-status-text { font-weight: bold; color: #555; }
+
+    input:checked + .slider {
+        background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+
+    #maint-status-text {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+    }
+
+    /* Layout admin */
+    .admin-layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .admin-nav {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .admin-nav a {
+        display: block;
+        text-decoration: none;
+        color: var(--text-secondary);
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: var(--radius-md);
+        transition: var(--transition);
+        font-weight: 500;
+        border-left: 4px solid transparent;
+        position: relative;
+    }
+
+    .admin-nav a:hover {
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        transform: translateX(4px);
+        border-left-color: var(--blue-light);
+    }
+
+    .admin-content {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+    }
+
+    .admin-content .card {
+        background: var(--bg-secondary);
+        border-radius: var(--radius-lg);
+        padding: 3rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border-color);
+        text-align: center;
+        margin: 0;
+        transition: var(--transition);
+    }
+
+    .admin-content .card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+
+    .admin-content h3 {
+        color: var(--blue-accent);
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .admin-content p.muted {
+        color: var(--text-muted);
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* Panel de login mejorado */
+    .login-panel {
+        max-width: 480px;
+        margin: 4rem auto;
+        padding: 2.5rem;
+        text-align: center;
+        border-radius: var(--radius-lg);
+        background: var(--bg-secondary);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-color);
+    }
+
+    .login-panel h2 {
+        margin: 0 0 1rem 0;
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .login-panel input {
+        width: 100%;
+        padding: 0.875rem;
+        margin: 0.5rem 0;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: var(--bg-secondary);
+        font-size: 0.875rem;
+        transition: var(--transition);
+    }
+
+    .login-panel input:focus {
+        outline: none;
+        border-color: var(--blue-light);
+        box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
+    }
+
+    .login-panel button {
+        width: 100%;
+        background: linear-gradient(135deg, var(--blue-accent), var(--blue-light));
+        color: white;
+        border: none;
+        padding: 0.875rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-top: 1rem;
+        transition: var(--transition);
+    }
+
+    .login-panel button:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Botón logout */
+    #logout-btn {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: var(--transition);
+    }
+
+    #logout-btn:hover {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Dashboard header */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-header h2 {
+        margin: 0;
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    /* Animaciones */
+    .pulse-animation {
+        animation: pulse-blue 1.5s infinite;
+    }
+
+    @keyframes pulse-blue {
+        0% {
+            box-shadow: 0 0 0 0 rgba(13, 93, 158, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(13, 93, 158, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(13, 93, 158, 0);
+        }
+    }
+
+    /* Inputs de búsqueda */
+    #search-mem, #proj-member-search {
+        border: 2px solid var(--blue-light);
+        background-color: #f0f8ff;
+        font-weight: 600;
+        color: var(--blue-accent);
+        border-radius: var(--radius-md);
+        padding: 0.5rem;
+        transition: var(--transition);
+    }
+
+    #search-mem:focus, #proj-member-search:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem 0.5rem;
+        }
+
+        .admin-layout {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .admin-nav {
+            position: static;
+            order: 2;
+        }
+
+        .admin-content {
+            order: 1;
+        }
+
+        #public-admin-title {
+            font-size: 1.5rem;
+        }
+
+        .switch-container {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .switch-label {
+            margin-right: 0;
+        }
+    }
   </style>
 </head>
 <body class="admin">
@@ -83,236 +393,36 @@
           <span class="slider"></span>
         </label>
         <div>
-            <div style="font-size: 0.85rem; text-transform: uppercase; color: #e65100; font-weight: bold;">Control de Sitio</div>
+            <div style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; margin-bottom: 0.25rem;">Control de Sitio</div>
             <span id="maint-status-text">Web Operativa (Pública)</span>
         </div>
       </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="margin:0;">Dashboard</h2>
-        <button id="logout-btn" class="btn muted">Salir</button>
+
+      <div class="dashboard-header">
+        <h2>Dashboard</h2>
+        <button id="logout-btn">Salir</button>
       </div>
 
       <div class="admin-layout">
         <nav class="admin-nav">
-          <a href="sysadmin.html" id="btn-sysadmin-link" class="hidden" style="background-color: #013a63; color: white; border-left: 4px solid #ff6b6b; box-shadow: 0 4px 10px rgba(1, 58, 99, 0.3);">⚡ God Mode (SysAdmin)</a>
+          <a href="sysadmin.html" id="btn-sysadmin-link" class="hidden" style="background-color: #ede7f6; color: #4527a0; font-weight: 600; border-left: 4px solid #4527a0;">⚡ God Mode (SysAdmin)</a>
           
-          <a href="#sec-about" style="background-color: #ede7f6; color: #4527a0; font-weight: 600; border-left: 4px solid #4527a0;">📌 Nosotros</a>
-          <a href="#sec-projects" style="background-color: #e0f2f1; color: #00695c; font-weight: 600; border-left: 4px solid #00695c;">💻 Proyectos</a>
-          <a href="#sec-events" style="background-color: #fff8e1; color: #f57f17; font-weight: 600; border-left: 4px solid #f57f17;">📅 Eventos</a>
-          <a href="#sec-news" style="background-color: #ffebee; color: #c62828; font-weight: 600; border-left: 4px solid #c62828;">📰 Noticias</a>
-          <a href="#sec-members" style="background-color: #eceff1; color: #37474f; font-weight: 600; border-left: 4px solid #37474f;">👥 Integrantes</a>
-          <a href="#sec-aesfact" style="background-color: #fff3e0; color: #e65100; font-weight: 600; border-left: 4px solid #e65100;">🏛️ AESFACT</a>
+          <a href="about-admin.html" style="background-color: #ede7f6; color: #4527a0; font-weight: 600; border-left: 4px solid #4527a0;">📌 Nosotros</a>
+          <a href="projects-admin.html" style="background-color: #e0f2f1; color: #00695c; font-weight: 600; border-left: 4px solid #00695c;">💻 Proyectos</a>
+          <a href="events-admin.html" style="background-color: #fff8e1; color: #f57f17; font-weight: 600; border-left: 4px solid #f57f17;">📅 Eventos</a>
+          <a href="news-admin.html" style="background-color: #ffebee; color: #c62828; font-weight: 600; border-left: 4px solid #c62828;">📰 Noticias</a>
+          <a href="members-admin.html" style="background-color: #eceff1; color: #37474f; font-weight: 600; border-left: 4px solid #37474f;">👥 Integrantes</a>
+          <a href="aesfact-admin.html" style="background-color: #fff3e0; color: #e65100; font-weight: 600; border-left: 4px solid #e65100;">🏛️ AESFACT</a>
 
-          <a href="finanzas.html" style="background-color: #e8f5e9; color: #2e7d32; font-weight: bold; border-left: 4px solid #2e7d32; margin-top: 15px;">💰 Gestión Financiera</a>
-          <a href="#sec-contacts" style="background-color: #e3f2fd; color: #0277bd; font-weight: bold; border-left: 4px solid #0277bd;">📩 Bandeja de Mensajes</a>
+          <a href="finanzas.html" style="background-color: #e8f5e9; color: #2e7d32; font-weight: 600; border-left: 4px solid #2e7d32; margin-top: 1rem;">💰 Gestión Financiera</a>
+          <a href="contacts-admin.html" style="background-color: #e3f2fd; color: #0277bd; font-weight: 600; border-left: 4px solid #0277bd;">📩 Bandeja de Mensajes</a>
         </nav>
 
         <div class="admin-content">
-          
-          <section id="sec-about" class="admin-section card">
-            <h3>Nosotros</h3>
-            <label>Misión</label>
-            <textarea id="edit-mision"></textarea>
-            <label>Visión</label>
-            <textarea id="edit-vision"></textarea>
-            <label>Valores (uno por línea)</label>
-            <textarea id="edit-valores" rows="5"></textarea>
-            <label>Política</label>
-            <textarea id="edit-politica"></textarea>
-            <label>Objetivos (uno por línea)</label>
-            <textarea id="edit-objetivos" rows="4"></textarea>
-            <label>Objetivos Calidad (uno por línea)</label>
-            <textarea id="edit-objetivos-calidad" rows="4"></textarea>
-            <button id="save-about" class="btn" style="margin-top: 10px;">Guardar Información</button>
-          </section>
-
-          <section id="sec-projects" class="admin-section card">
-            <h3>Gestión de Proyectos</h3>
-            <div style="display:grid; gap:15px;">
-                <div>
-                    <label class="muted">📌 Título del Proyecto</label>
-                    <input id="proj-title" placeholder="Ej: Desarrollo de Plataforma">
-                    
-                    <label class="muted">📝 Descripción general</label>
-                    <textarea id="proj-desc" placeholder="Detalles del proyecto..." rows="3"></textarea>
-                    
-                    <div class="form-grid">
-                        <div>
-                            <label>📅 Fecha de Inicio</label>
-                            <input id="proj-date" type="date" style="margin:0;">
-                        </div>
-                        <div>
-                            <label>🚦 Estado Actual</label>
-                            <select id="proj-status" style="margin:0;">
-                                <option value="En curso">En curso</option>
-                                <option value="Terminado">Terminado</option>
-                                <option value="Cancelado">Cancelado</option>
-                            </select>
-                        </div>
-                        <div style="grid-column: 1 / -1; margin-top: 5px;">
-                            <label>🎯 Etapa del Plan Anual</label>
-                            <select id="proj-etapa" style="margin:0; border: 2px solid var(--blue-accent); background-color: #f8faff;">
-                                <option value="etapa_1">🔵 Etapa 1: Proyección Académica y Tecnológica</option>
-                                <option value="etapa_2">🟢 Etapa 2: Compromiso Ambiental</option>
-                                <option value="etapa_3">🟡 Etapa 3: Responsabilidad Social y Humanitaria</option>
-                                <option value="etapa_4">🔴 Etapa 4: Integración y Cierre Anual</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="proj-feedback-section" class="hidden" style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #dee2e6;">
-                    <label id="proj-feedback-label" style="color:var(--blue-accent); font-weight:bold;">Conclusiones / Motivo</label>
-                    <textarea id="proj-feedback" placeholder="Escribe aquí los detalles..." rows="3"></textarea>
-                </div>
-                
-                <div id="proj-participants-section" class="hidden" style="background:#f0f8ff; padding:15px; border-radius:8px; border:1px solid #cce5ff;">
-                    <label style="color:var(--blue-light); font-weight:bold;">👥 Participantes del Proyecto</label>
-                    <div style="display:flex; gap:5px; margin-bottom:10px; position: relative;">
-                        <input id="proj-member-search" placeholder="🔍 Buscar miembro para añadir..." style="margin:0; flex:1;">
-                        <div id="proj-member-results" style="position:absolute; background:white; border:1px solid #ddd; max-height:150px; overflow-y:auto; width:100%; display:none; z-index:100; top:45px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1);"></div>
-                    </div>
-                    <div style="display:flex; gap:5px; align-items:center;">
-                        <input id="proj-external-name" placeholder="Nombre voluntario/externo" style="margin:0; flex:1;">
-                        <button id="proj-add-external" class="btn" style="padding:10px;">Añadir</button>
-                    </div>
-                    <div id="proj-participants-list" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
-                </div>
-                
-                <div>
-                    <label class="muted">🖼️ Galería de Imágenes (Se añaden a las existentes)</label>
-                    <div class="file-upload-wrapper">
-                        <input id="proj-gallery-files" type="file" multiple accept="image/*">
-                    </div>
-                    <div id="proj-gallery-preview" class="media-preview" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
-                </div>
-                
-                <div class="admin-actions" style="margin-top:15px;">
-                    <button id="add-proj" class="btn" style="width:100%;">Guardar Proyecto</button>
-                    <button id="cancel-proj" class="btn muted hidden" style="width:100%;">Cancelar Edición</button>
-                </div>
-            </div>
-            <div id="proj-admin-list" style="margin-top:20px;"></div>
-          </section>
-
-          <section id="sec-events" class="admin-section card">
-            <h3>Eventos</h3>
-            <div class="form-grid">
-                <div>
-                    <label>📌 Título del Evento</label>
-                    <input id="evt-title" placeholder="Ej: Asamblea General">
-                </div>
-                <div>
-                    <label>📅 Fecha del Evento</label>
-                    <input id="evt-date" type="date">
-                </div>
-            </div>
-            <label>📝 Descripción</label>
-            <textarea id="evt-desc" placeholder="Detalles, lugar, hora..."></textarea>
-            
-            <div class="admin-actions" style="margin-top: 10px;">
-                <button id="add-evt" class="btn">Agregar Evento</button>
-                <button id="cancel-evt" class="btn muted hidden">Cancelar</button>
-            </div>
-            <div id="event-admin-list" style="margin-top: 20px;"></div>
-          </section>
-
-          <section id="sec-news" class="admin-section card">
-            <h3>Noticias</h3>
-            <div class="form-grid">
-                <div>
-                    <label>📌 Título de la Noticia</label>
-                    <input id="news-title" placeholder="Título principal">
-                </div>
-                <div>
-                    <label>📅 Fecha de Publicación</label>
-                    <input id="news-date" type="date">
-                </div>
-            </div>
-            <label>📝 Contenido</label>
-            <textarea id="news-body" placeholder="Cuerpo de la noticia..." rows="4"></textarea>
-            
-            <label class="muted">🔗 URL de imagen (opcional)</label>
-            <input id="news-image-url" placeholder="https://ejemplo.com/imagen.jpg">
-            
-            <label class="muted">📸 O sube una imagen desde tu equipo:</label>
-            <div class="file-upload-wrapper">
-                <input id="news-image-file" type="file" accept="image/*">
-            </div>
-            
-            <div class="admin-actions" style="margin-top: 10px;">
-                <button id="add-news" class="btn">Publicar Noticia</button>
-                <button id="cancel-news" class="btn muted hidden">Cancelar</button>
-            </div>
-            <div id="news-admin-list" style="margin-top: 20px;"></div>
-          </section>
-
-          <section id="sec-members" class="admin-section card">
-            <h3>Integrantes</h3>
-            
-            <div class="form-grid">
-                <div>
-                    <label>👤 Nombre Completo</label>
-                    <input id="mem-name" placeholder="Ej: Juan Pérez">
-                </div>
-                <div>
-                    <label>💼 Cargo / Rol</label>
-                    <input id="mem-role" placeholder="Ej: Presidente">
-                </div>
-                <div>
-                    <label>📧 Correo Electrónico</label>
-                    <input id="mem-email" placeholder="ejemplo@ugb.edu.sv">
-                </div>
-                <div>
-                    <label>📱 Teléfono</label>
-                    <input id="mem-phone" placeholder="+503 0000-0000">
-                </div>
-            </div>
-
-            <label class="muted">🔗 URL de Foto (opcional)</label>
-            <input id="mem-photo-url" placeholder="https://ejemplo.com/foto.jpg">
-            
-            <label class="muted">📸 O sube una foto desde tu equipo:</label>
-            <div class="file-upload-wrapper">
-                <input id="mem-photo-file" type="file" accept="image/*">
-            </div>
-            
-            <div class="admin-actions" style="margin-top: 10px;">
-                <button id="add-mem" class="btn">Guardar Integrante</button>
-                <button id="cancel-mem" class="btn muted hidden">Cancelar</button>
-            </div>
-
-            <div style="margin-top: 35px; margin-bottom: 15px; padding-top: 20px; border-top: 1px solid #eee;">
-                <label style="font-size: 0.95rem; font-weight: bold; color: var(--blue-accent);">🔍 Filtrar lista de integrantes:</label>
-                <input id="search-mem" placeholder="Escribe el nombre para buscar..." style="margin-top: 5px;">
-            </div>
-
-            <div id="member-admin-list"></div>
-          </section>
-
-          <section id="sec-aesfact" class="admin-section card">
-            <h3>AESFACT Portada</h3>
-            <label>📅 Año Activo</label>
-            <input id="aesfact-year" placeholder="Año (ej: 2026)">
-            
-            <label>🔗 URL de Imagen principal (opcional)</label>
-            <input id="aesfact-image-url" placeholder="https://...">
-            
-            <label>🖼️ O sube la imagen de portada aquí:</label>
-            <div class="file-upload-wrapper">
-                <input id="aesfact-image-file" type="file" accept="image/*">
-            </div>
-            
-            <button id="save-aesfact" class="btn" style="margin-top: 10px;">Guardar Portada</button>
-          </section>
-
-          <section id="sec-contacts" class="admin-section card">
-            <h3>Bandeja de Mensajes</h3>
-            <p class="muted">Mensajes enviados por los estudiantes desde el formulario de la web.</p>
-            <div id="contacts-admin-list" style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
-            </div>
-          </section>
-
+          <div class="card">
+            <h3>¡Bienvenido al Panel de Administración!</h3>
+            <p class="muted">Selecciona una opción del menú lateral para gestionar los diferentes aspectos de AESFACT.</p>
+          </div>
         </div>
       </div>
     </div>

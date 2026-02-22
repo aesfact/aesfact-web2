@@ -47,12 +47,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
-    if (document.body.classList.contains('admin')) initAdmin();
+    if (document.body.classList.contains('admin')) {
+        initSupabase();
+        initAdmin();
+    }
 });
 
 async function initSupabase() {
     if (window.supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         console.log('✅ Supabase conectado');
         setupRealtime();
     } else console.error('❌ Librería Supabase no encontrada');
@@ -69,7 +72,7 @@ async function checkMaintenanceModeGuard() {
     }
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabaseClient
             .from('site_controls')
             .select('is_enabled')
             .eq('control_name', 'maintenance_mode')
@@ -101,8 +104,8 @@ function mostrarAvisoAdmin() {
 }
 
 function setupRealtime() {
-    if (!supabase) return;
-    supabase.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public' }, () => {
+    if (!window.supabaseClient) return;
+    window.supabaseClient.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public' }, () => {
         renderPublic();
         if (document.body.classList.contains('admin') && !document.getElementById('admin-panel').classList.contains('hidden')) {
             loadAdminLists();
@@ -116,10 +119,10 @@ async function uploadImageToStorage(file, folderName) {
         const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_').toLowerCase();
         const filePath = `${folderName}/${Date.now()}_${cleanName}`;
         
-        const { data, error } = await supabase.storage.from('media').upload(filePath, file, { cacheControl: '3600', upsert: false });
+        const { data, error } = await window.supabaseClient.storage.from('media').upload(filePath, file, { cacheControl: '3600', upsert: false });
         if (error) throw error;
         
-        const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(filePath);
+        const { data: { publicUrl } } = window.supabaseClient.storage.from('media').getPublicUrl(filePath);
         return publicUrl;
     } catch (e) { console.error(e); alert('Error subiendo imagen'); return null; }
 }
@@ -133,7 +136,7 @@ function getFilePathFromUrl(url) {
 async function deleteFileFromStorage(url) {
     const path = getFilePathFromUrl(url);
     if (path) {
-        const { error } = await supabase.storage.from('media').remove([path]);
+        const { error } = await window.supabaseClient.storage.from('media').remove([path]);
         if (error) console.error('Error borrando archivo de storage:', error.message);
         else console.log('✅ Archivo eliminado correctamente:', path);
     }
@@ -141,21 +144,25 @@ async function deleteFileFromStorage(url) {
 
 // --- MANEJO DE DATOS PÚBLICOS ---
 async function readData() {
-    if (!supabase) return null;
+    console.log('🔍 readData() called');
+    if (!window.supabaseClient) {
+        console.error('❌ Supabase not initialized');
+        return null;
+    }
     const dataStore = { mision:'', vision:'', valores:[], politica:'', objetivos:[], objetivos_calidad:[], news:[], projects:[], events:[], members:[], aesfact:{year:'',image:''}, gallery:[], contacts:[] };
     try {
         const queries = [
-            supabase.from('config').select('*'),
-            supabase.from('news').select('*').order('date', { ascending: false }),
-            supabase.from('projects').select('*').order('date', { ascending: false }),
-            supabase.from('events').select('*').order('date', { ascending: true }),
-            supabase.from('members').select('*'),
-            supabase.from('aesfact').select('*').eq('id', 'aesfact').single()
+            window.supabaseClient.from('config').select('*'),
+            window.supabaseClient.from('news').select('*').order('date', { ascending: false }),
+            window.supabaseClient.from('projects').select('*').order('date', { ascending: false }),
+            window.supabaseClient.from('events').select('*').order('date', { ascending: true }),
+            window.supabaseClient.from('members').select('*'),
+            window.supabaseClient.from('aesfact').select('*').eq('id', 'aesfact').single()
         ];
         
         // Si es Admin, también traemos los mensajes
         if (sessionStorage.getItem('aesfact_role')) {
-            queries.push(supabase.from('contacts').select('*').order('date', { ascending: false }));
+            queries.push(window.supabaseClient.from('contacts').select('*').order('date', { ascending: false }));
         }
 
         const res = await Promise.all(queries);
@@ -167,11 +174,22 @@ async function readData() {
         if(ae.data) dataStore.aesfact=ae.data;
         if(co && co.data) dataStore.contacts = co.data; 
 
+        console.log('📊 Data loaded:', {
+            news: dataStore.news.length,
+            projects: dataStore.projects.length,
+            events: dataStore.events.length,
+            members: dataStore.members.length,
+            contacts: dataStore.contacts.length
+        });
+
         if(dataStore.aesfact.image) dataStore.gallery.push(dataStore.aesfact.image);
         dataStore.news.forEach(n=>{if(n.image)dataStore.gallery.push(n.image)});
         
         return dataStore;
-    } catch(e) { return null; }
+    } catch(e) {
+        console.error('❌ Error in readData():', e);
+        return null;
+    }
 }
 
 async function renderPublic() {
@@ -419,7 +437,7 @@ function initAdmin() {
         loginBtn.disabled = true;
         loginBtn.textContent = 'Verificando...';
 
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await window.supabaseClient.auth.signInWithPassword({
             email: email, password: password,
         });
 
@@ -429,24 +447,24 @@ function initAdmin() {
             loginBtn.disabled = false; loginBtn.textContent = 'Entrar'; return;
         }
 
-        const { data: roleData, error: roleError } = await supabase
+        const { data: roleData, error: roleError } = await window.supabaseClient
             .from('admin_roles')
             .select('role, status, name') 
             .eq('id', data.user.id).single();
 
         if (roleError || !roleData) {
             alert('No tienes un Rol asignado. Contacta al SysAdmin.');
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             loginBtn.disabled = false; loginBtn.textContent = 'Entrar'; return;
         }
 
         if (roleData.status === 'pausado') {
             alert('⛔ Tu cuenta ha sido temporalmente suspendida por el SysAdmin.');
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             loginBtn.disabled = false; loginBtn.textContent = 'Entrar'; return;
         }
 
-        const { data: permData } = await supabase.from('role_permissions').select('allowed_modules').eq('role', roleData.role).single();
+        const { data: permData } = await window.supabaseClient.from('role_permissions').select('allowed_modules').eq('role', roleData.role).single();
 
         sessionStorage.setItem('aesfact_role', roleData.role);
         sessionStorage.setItem('aesfact_name', roleData.name); 
@@ -456,7 +474,7 @@ function initAdmin() {
     });
 
     logoutBtn?.addEventListener('click', async () => {
-        await supabase.auth.signOut();
+        await window.supabaseClient.auth.signOut();
         sessionStorage.removeItem('aesfact_role');
         sessionStorage.removeItem('aesfact_name');
         sessionStorage.removeItem('aesfact_permissions');
@@ -467,13 +485,13 @@ function initAdmin() {
 }
 
 async function verificarSesionActiva() {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
     
     if (session) {
-        const { data: roleData } = await supabase.from('admin_roles').select('role, status, name').eq('id', session.user.id).single();
+        const { data: roleData } = await window.supabaseClient.from('admin_roles').select('role, status, name').eq('id', session.user.id).single();
         
         if (roleData && roleData.status !== 'pausado') {
-            const { data: permData } = await supabase.from('role_permissions').select('allowed_modules').eq('role', roleData.role).single();
+            const { data: permData } = await window.supabaseClient.from('role_permissions').select('allowed_modules').eq('role', roleData.role).single();
             sessionStorage.setItem('aesfact_role', roleData.role);
             sessionStorage.setItem('aesfact_name', roleData.name); 
             if(permData) sessionStorage.setItem('aesfact_permissions', JSON.stringify(permData.allowed_modules));
@@ -482,7 +500,7 @@ async function verificarSesionActiva() {
             if (roleData && roleData.status === 'pausado') {
                 alert('⛔ Tu sesión ha caducado porque tu cuenta fue suspendida.');
             }
-            await supabase.auth.signOut();
+            await window.supabaseClient.auth.signOut();
             sessionStorage.removeItem('aesfact_role');
             sessionStorage.removeItem('aesfact_name');
             sessionStorage.removeItem('aesfact_permissions');
@@ -515,14 +533,14 @@ function aplicarPermisosVisuales() {
     const moduleMap = {
         'panel_sysadmin':['#btn-sysadmin-link'],
         'mantenimiento': ['.switch-container'],
-        'nosotros':      ['a[href="#sec-about"]', '#sec-about'],
-        'proyectos':     ['a[href="#sec-projects"]', '#sec-projects'],
-        'eventos':       ['a[href="#sec-events"]', '#sec-events'],
-        'noticias':      ['a[href="#sec-news"]', '#sec-news'],
-        'contactos':     ['a[href="#sec-contacts"]', '#sec-contacts'], 
+        'nosotros':      ['a[href="about-admin.html"]'],
+        'proyectos':     ['a[href="projects-admin.html"]'],
+        'eventos':       ['a[href="events-admin.html"]'],
+        'noticias':      ['a[href="news-admin.html"]'],
+        'contactos':     ['a[href="contacts-admin.html"]'], 
         'finanzas':      ['a[href="finanzas.html"]'], 
-        'integrantes':   ['a[href="#sec-members"]', '#sec-members'],
-        'aesfact':       ['a[href="#sec-aesfact"]', '#sec-aesfact']
+        'integrantes':   ['a[href="members-admin.html"]'],
+        'aesfact':       ['a[href="aesfact-admin.html"]']
     };
 
     Object.values(moduleMap).forEach(selectors => {
@@ -564,7 +582,7 @@ async function initMaintenanceControl() {
     if(!toggle || !text) return;
 
     try {
-        const { data, error } = await supabase.from('site_controls').select('*').eq('control_name', 'maintenance_mode').maybeSingle();
+        const { data, error } = await window.supabaseClient.from('site_controls').select('*').eq('control_name', 'maintenance_mode').maybeSingle();
         if (!error) {
             const isMaintained = (data && data.is_enabled === true);
             toggle.checked = isMaintained;
@@ -575,7 +593,7 @@ async function initMaintenanceControl() {
     toggle.addEventListener('change', async (e) => {
         const newState = e.target.checked;
         updateMaintText(newState);
-        const { error } = await supabase.from('site_controls').update({ is_enabled: newState }).eq('control_name', 'maintenance_mode'); 
+        const { error } = await window.supabaseClient.from('site_controls').update({ is_enabled: newState }).eq('control_name', 'maintenance_mode'); 
         if(error) {
             alert('Error al guardar: ' + error.message);
             toggle.checked = !newState;
@@ -607,12 +625,12 @@ function setupAdminListeners() {
     document.getElementById('save-about')?.addEventListener('click',async()=>{
         const v=id=>document.getElementById(id)?.value||''; const a=id=>v(id).split('\n').filter(Boolean);
         const up=[{key:'mision',value:v('edit-mision')},{key:'vision',value:v('edit-vision')},{key:'politica',value:v('edit-politica')},{key:'valores',value:JSON.stringify(a('edit-valores'))},{key:'objetivos',value:JSON.stringify(a('edit-objetivos'))},{key:'objetivos_calidad',value:JSON.stringify(a('edit-objetivos-calidad'))}];
-        for(let u of up) await supabase.from('config').upsert({key:u.key,value:u.value}); alert('Guardado');
+        for(let u of up) await window.supabaseClient.from('config').upsert({key:u.key,value:u.value}); alert('Guardado');
     });
     document.getElementById('save-aesfact')?.addEventListener('click',async()=>{
         const y=document.getElementById('aesfact-year').value; let i=document.getElementById('aesfact-image-url').value;
         const f=document.getElementById('aesfact-image-file'); if(f.files[0]) i=await uploadImageToStorage(f.files[0],'aesfact')||i;
-        await supabase.from('aesfact').upsert({id:'aesfact',year:y,image:i}); alert('Guardado');
+        await window.supabaseClient.from('aesfact').upsert({id:'aesfact',year:y,image:i}); alert('Guardado');
     });
     setupCrud('news','news',['title','body','date','image'],'noticias');
     setupCrud('evt','events',['title','desc','date'],'eventos');
@@ -684,8 +702,8 @@ function setupProjectManager(allMembers) {
             const pl={title:t, desc:document.getElementById('proj-desc').value, date:document.getElementById('proj-date').value, status:status.value, etapa: etapa, feedback:document.getElementById('proj-feedback').value, participants:tempParticipants, gallery:tempGallery};
             
             let err=null;
-            if(currentEditId) { const r=await supabase.from('projects').update(pl).eq('id',currentEditId); err=r.error; }
-            else { const r=await supabase.from('projects').insert([{...pl, id:Date.now().toString()}]); err=r.error; }
+            if(currentEditId) { const r=await window.supabaseClient.from('projects').update(pl).eq('id',currentEditId); err=r.error; }
+            else { const r=await window.supabaseClient.from('projects').insert([{...pl, id:Date.now().toString()}]); err=r.error; }
 
             if(err) alert('Error guardando'); else { alert('Guardado'); resetProj(); loadAdminLists(); }
             btn.disabled=false; btn.textContent='Guardar Proyecto';
@@ -760,7 +778,7 @@ function setupCrud(pf,tb,fds,fld){
             else if(document.getElementById(`${pf}-${f}`)) pl[f]=document.getElementById(`${pf}-${f}`).value;
         }
         if((tb==='news'||tb==='members')&&(!pl.title&&!pl.name)){add.disabled=false;return alert('Datos faltantes')}
-        const r=currentEditId?await supabase.from(tb).update(pl).eq('id',currentEditId):await supabase.from(tb).insert([{...pl,id:Date.now().toString()}]);
+        const r=currentEditId?await window.supabaseClient.from(tb).update(pl).eq('id',currentEditId):await window.supabaseClient.from(tb).insert([{...pl,id:Date.now().toString()}]);
         if(r.error)alert('Error'); else {alert('Guardado'); resetForm(pf,fds); loadAdminLists();}
         add.disabled=false; add.textContent=currentEditId?'Actualizar':'Agregar';
     };
@@ -800,7 +818,7 @@ async function loadAdminLists() {
                     if(x.image) await deleteFileFromStorage(x.image);
                     if(x.photo) await deleteFileFromStorage(x.photo);
                     if(x.gallery && Array.isArray(x.gallery)) for(let url of x.gallery) await deleteFileFromStorage(url);
-                    await supabase.from(tb).delete().eq('id', x.id); 
+                    await window.supabaseClient.from(tb).delete().eq('id', x.id); 
                     loadAdminLists(); 
                 } 
             };

@@ -1,24 +1,16 @@
 // js/finanzas.js - VERSIÓN CRUD + REPORTES PDF
 // ============================================
 
-const SUPABASE_URL = 'https://vjdwzfvvbybwwymtqoym.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHd6ZnZ2Ynlid3d5bXRxb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzU4NDgsImV4cCI6MjA4NzA1MTg0OH0.mjdhTGIBv4BpMbYKMdeTzmssekDxjKsTmFkkas692C4';
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 // Variables Globales
 let allTransactions = [];
 let financeChart = null;
-let currentEditId = null; 
+let currentEditId = null;
 
 // --- INICIALIZACIÓN SEGURA ---
 document.addEventListener('DOMContentLoaded', async () => {
-    
+
     // 1. Verificar sesión real de Supabase (Ya no usamos el sessionStorage inseguro)
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-        alert('Acceso denegado. Debes iniciar sesión como Admin.');
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
         window.location.href = 'admin.html';
         return;
     }
@@ -47,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // --- CARGA DE DATOS ---
 
 async function cargarProyectos() {
-    const { data, error } = await supabase.from('projects').select('title');
+    const { data, error } = await window.supabaseClient.from('projects').select('title');
     if (error) return console.error(error);
 
     const select = document.getElementById('f-project');
@@ -61,7 +53,7 @@ async function cargarProyectos() {
 }
 
 async function cargarFinanzas() {
-    const { data, error } = await supabase
+    const { data, error } = await window.supabaseClient
         .from('finances')
         .select('*')
         .order('date', { ascending: false });
@@ -240,10 +232,10 @@ window.guardarMovimiento = async () => {
     let error = null;
 
     if (currentEditId) {
-        const response = await supabase.from('finances').update(payload).eq('id', currentEditId); 
+const response = await window.supabaseClient.from('finances').update(payload).eq('id', currentEditId);
         error = response.error;
     } else {
-        const response = await supabase.from('finances').insert([payload]);
+        const response = await window.supabaseClient.from('finances').insert([payload]);
         error = response.error;
     }
 
@@ -258,7 +250,7 @@ window.guardarMovimiento = async () => {
 
 window.borrarMovimiento = async (id) => {
     if (!confirm('¿Estás seguro de eliminar este registro permanentemente?')) return;
-    const { error } = await supabase.from('finances').delete().eq('id', id);
+    const { error } = await window.supabaseClient.from('finances').delete().eq('id', id);
     if (error) alert('Error al borrar: ' + error.message);
     else cargarFinanzas();
 };

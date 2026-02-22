@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Proyectos - AESFACT</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+    <style>
+        :root {
+            --dark-blue: #04293a;
+            --blue-accent: #013a63;
+            --blue-light: #0d5d9e;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary), #f1f5f9);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        /* Header minimalista */
+        .admin-header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .admin-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0;
+        }
+
+        .admin-header .back-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+
+        .admin-header .back-link:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .admin-header h2 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Contenedor principal */
+        .projects-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        /* Secciones */
+        .projects-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+
+        .projects-section:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+
+        .projects-section h3 {
+            margin: 0 0 1.5rem 0;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Formularios */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-grid label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-grid input,
+        .form-grid select,
+        .form-grid textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        .form-grid input:focus,
+        .form-grid select:focus,
+        .form-grid textarea:focus {
+            outline: none;
+            border-color: var(--blue-light);
+            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
+        }
+
+        /* Inputs individuales */
+        input[type="text"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--blue-light);
+            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* File upload */
+        .file-upload-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .file-upload-wrapper input {
+            opacity: 0;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-wrapper::before {
+            content: '📎 Seleccionar imágenes';
+            display: block;
+            padding: 1rem;
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            text-align: center;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .file-upload-wrapper:hover::before {
+            border-color: var(--blue-light);
+            background: var(--bg-secondary);
+        }
+
+        /* Media preview */
+        .media-preview img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border-color);
+            margin: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .media-preview img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Botones */
+        .btn {
+            background: linear-gradient(135deg, var(--blue-accent), var(--blue-light));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn.muted {
+            background: linear-gradient(135deg, #64748b, #475569);
+        }
+
+        .btn.muted:hover {
+            background: linear-gradient(135deg, #475569, #334155);
+        }
+
+        /* Acciones admin */
+        .admin-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Barra de búsqueda */
+        .search-bar {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-bar label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-secondary);
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        .search-bar input:focus {
+            outline: none;
+            border-color: var(--blue-light);
+            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
+        }
+
+        /* Estilos mejorados para las etapas */
+        .roadmap-stage {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+
+        .roadmap-stage:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .roadmap-stage h3 {
+            color: var(--text-primary);
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Grid de proyectos por etapa */
+        .stage-projects {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Tarjetas de proyecto mejoradas */
+        .project-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .project-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            border-color: var(--blue-light);
+        }
+
+        .project-card h4 {
+            color: var(--text-primary);
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .project-card .project-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .project-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-activo {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .status-terminado {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .status-cancelado {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .status-pendiente {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .project-card .project-desc {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+            font-size: 0.875rem;
+        }
+
+        .project-card .project-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .project-card .btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+        }
+
+        /* Notificaciones mejoradas */
+        .notification {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            z-index: 1000;
+            transition: var(--transition);
+            max-width: 400px;
+            backdrop-filter: blur(8px);
+            font-weight: 500;
+        }
+
+        .notification::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--blue-accent);
+            border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+        }
+
+        .notification.error::before {
+            background: #ef4444;
+        }
+
+        .notification.error {
+            border-color: #fecaca;
+        }
+
+        .notification.hidden {
+            opacity: 0;
+            transform: translateX(100%);
+            pointer-events: none;
+        }
+
+        /* Animación de entrada */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .notification {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .projects-container {
+                padding: 1rem 0.5rem;
+            }
+
+            .projects-section {
+                padding: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stage-projects {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-header .projects-container {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .admin-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div class="container">
+            <a href="admin.html" class="back-link">← Volver al Admin</a>
+            <h2>Gestión de Proyectos</h2>
+        </div>
+    </div>
+
+    <div class="projects-container">
+        <section class="projects-section">
+            <h3>Agregar/Editar Proyecto</h3>
+            <div style="display:grid; gap:15px;">
+                <div>
+                    <label class="muted">📌 Título del Proyecto</label>
+                    <input id="proj-title" placeholder="Ej: Desarrollo de Plataforma">
+                    
+                    <label class="muted">📝 Descripción general</label>
+                    <textarea id="proj-desc" placeholder="Detalles del proyecto..." rows="3"></textarea>
+                    
+                    <div class="form-grid">
+                        <div>
+                            <label>📅 Fecha de Inicio</label>
+                            <input id="proj-date" type="date" style="margin:0;">
+                        </div>
+                        <div>
+                            <label>🚦 Estado Actual</label>
+                            <select id="proj-status" style="margin:0;">
+                                <option value="En curso">En curso</option>
+                                <option value="Terminado">Terminado</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                        <div style="grid-column: 1 / -1; margin-top: 5px;">
+                            <label>🎯 Etapa del Plan Anual</label>
+                            <select id="proj-etapa" style="margin:0; border: 2px solid var(--blue-accent); background-color: #f8faff;">
+                                <option value="etapa_1">🔵 Etapa 1: Proyección Académica y Tecnológica</option>
+                                <option value="etapa_2">🟢 Etapa 2: Compromiso Ambiental</option>
+                                <option value="etapa_3">🟡 Etapa 3: Responsabilidad Social y Humanitaria</option>
+                                <option value="etapa_4">🔴 Etapa 4: Integración y Cierre Anual</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="proj-feedback-section" class="hidden" style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #dee2e6;">
+                    <label id="proj-feedback-label" style="color:var(--blue-accent); font-weight:bold;">Conclusiones / Motivo</label>
+                    <textarea id="proj-feedback" placeholder="Escribe aquí los detalles..." rows="3"></textarea>
+                </div>
+                
+                <div id="proj-participants-section" class="hidden" style="background:#f0f8ff; padding:15px; border-radius:8px; border:1px solid #cce5ff;">
+                    <label style="color:var(--blue-light); font-weight:bold;">👥 Participantes del Proyecto</label>
+                    <div style="display:flex; gap:5px; margin-bottom:10px; position: relative;">
+                        <input id="proj-member-search" placeholder="🔍 Buscar miembro para añadir..." style="margin:0; flex:1;">
+                        <div id="proj-member-results" style="position:absolute; background:white; border:1px solid #ddd; max-height:150px; overflow-y:auto; width:100%; display:none; z-index:100; top:45px; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1);"></div>
+                    </div>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <input id="proj-external-name" placeholder="Nombre voluntario/externo" style="margin:0; flex:1;">
+                        <button id="proj-add-external" class="btn" style="padding:10px;">Añadir</button>
+                    </div>
+                    <div id="proj-participants-list" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;"></div>
+                </div>
+                
+                <div>
+                    <label class="muted">🖼️ Galería de Imágenes (Se añaden a las existentes)</label>
+                    <div class="file-upload-wrapper">
+                        <input id="proj-gallery-files" type="file" multiple accept="image/*">
+                    </div>
+                    <div id="proj-gallery-preview" class="media-preview" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+                </div>
+                
+                <div class="admin-actions" style="margin-top:15px;">
+                    <button id="add-proj" class="btn" style="width:100%;" onclick="addOrUpdateProject()">Guardar Proyecto</button>
+                    <button id="cancel-proj" class="btn muted hidden" style="width:100;">Cancelar Edición</button>
+                </div>
+            </div>
+
+            <div class="search-bar">
+                <input id="search-projects" placeholder="🔍 Buscar proyectos por título, descripción o estado..." oninput="filterProjects()">
+            </div>
+
+            <div id="proj-admin-list"></div>
+        </section>
+    </div>
+
+    <div id="notification" class="notification hidden"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Inicializar Supabase
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar permisos
+            const permsRaw = sessionStorage.getItem('aesfact_permissions');
+            if (!permsRaw || !JSON.parse(permsRaw).includes('proyectos')) {
+                alert('⛔ Acceso Restringido: No tienes permisos para gestionar proyectos.');
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            // Verificar sesión de Supabase
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            console.log('🔐 Session check:', session ? 'ACTIVE' : 'EXPIRED');
+            if (!session) {
+                alert('Sesión expirada. Ve a admin.html para iniciar sesión nuevamente.');
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            // Cargar y mostrar proyectos
+            await loadAndRenderProjects();
+        });
+
+        let allProjectsData = null;
+
+        async function loadAndRenderProjects() {
+            console.log('🏗️ loadAndRenderProjects() called');
+            const data = await readData();
+            console.log('📊 Projects data:', data ? data.projects : 'null');
+            if (!data || !data.projects) {
+                console.warn('❌ No projects data');
+                return;
+            }
+
+            allProjectsData = data.projects; // Guardar para filtrado
+            renderProjects(data.projects);
+
+            const container = document.getElementById('proj-admin-list');
+            container.innerHTML = '';
+
+            // Agrupar por etapas
+            const etapas = {
+                'etapa_1': { name: '🔵 ETAPA 1: Proyección Académica y Tecnológica', projects: [] },
+                'etapa_2': { name: '🟢 ETAPA 2: Compromiso Ambiental', projects: [] },
+                'etapa_3': { name: '🟡 ETAPA 3: Responsabilidad Social y Humanitaria', projects: [] },
+                'etapa_4': { name: '🔴 ETAPA 4: Integración y Cierre Anual', projects: [] }
+            };
+
+            data.projects.forEach(proj => {
+                console.log('📄 Proyecto:', proj.title, 'Etapa:', proj.etapa);
+                const etapa = proj.etapa || 'etapa_1';
+                if (etapas[etapa]) {
+                    etapas[etapa].projects.push(proj);
+                }
+            });
+
+            console.log('📂 Etapas agrupadas:', etapas);
+
+            Object.keys(etapas).forEach(etapaKey => {
+                const etapa = etapas[etapaKey];
+                if (etapa.projects.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'roadmap-stage';
+                    section.innerHTML = `<h3>${etapa.name}</h3>`;
+
+                    const projectsGrid = document.createElement('div');
+                    projectsGrid.className = 'stage-projects';
+
+                    etapa.projects.forEach(proj => {
+                        const statusClass = `status-${proj.status.toLowerCase().replace(' ', '')}`;
+                        const card = document.createElement('div');
+                        card.className = 'project-card';
+                        card.innerHTML = `
+                            <h4>${escapeHtml(proj.title)}</h4>
+                            <div class="project-meta">
+                                <span class="project-status ${statusClass}">${proj.status}</span>
+                                <small class="muted">${proj.date || 'Sin fecha'}</small>
+                            </div>
+                            <div class="project-desc">${escapeHtml(proj.desc.substring(0, 120))}${proj.desc.length > 120 ? '...' : ''}</div>
+                            <div class="project-actions">
+                                <button class="btn" onclick="editProject('${proj.id}')">Editar</button>
+                                <button class="btn muted" onclick="deleteProject('${proj.id}')">Eliminar</button>
+                            </div>
+                        `;
+                        projectsGrid.appendChild(card);
+                    });
+
+                    section.appendChild(projectsGrid);
+                    container.appendChild(section);
+                }
+            });
+        }
+
+        function renderProjects(projects) {
+            const container = document.getElementById('proj-admin-list');
+            container.innerHTML = '';
+
+            // Agrupar por etapas
+            const etapas = {
+                'etapa_1': { name: '🔵 ETAPA 1: Proyección Académica y Tecnológica', projects: [] },
+                'etapa_2': { name: '🟢 ETAPA 2: Compromiso Ambiental', projects: [] },
+                'etapa_3': { name: '🟡 ETAPA 3: Responsabilidad Social y Humanitaria', projects: [] },
+                'etapa_4': { name: '🔴 ETAPA 4: Integración y Cierre Anual', projects: [] }
+            };
+
+            projects.forEach(proj => {
+                const etapa = proj.etapa || 'etapa_1';
+                if (etapas[etapa]) {
+                    etapas[etapa].projects.push(proj);
+                }
+            });
+
+            Object.keys(etapas).forEach(etapaKey => {
+                const etapa = etapas[etapaKey];
+                if (etapa.projects.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'roadmap-stage';
+                    section.innerHTML = `<h3>${etapa.name}</h3>`;
+
+                    const projectsGrid = document.createElement('div');
+                    projectsGrid.className = 'stage-projects';
+
+                    etapa.projects.forEach(proj => {
+                        const statusClass = `status-${proj.status.toLowerCase().replace(' ', '')}`;
+                        const card = document.createElement('div');
+                        card.className = 'project-card';
+                        card.innerHTML = `
+                            <h4>${escapeHtml(proj.title)}</h4>
+                            <div class="project-meta">
+                                <span class="project-status ${statusClass}">${proj.status}</span>
+                                <small class="muted">${proj.date || 'Sin fecha'}</small>
+                            </div>
+                            <div class="project-desc">${escapeHtml(proj.desc.substring(0, 120))}${proj.desc.length > 120 ? '...' : ''}</div>
+                            <div class="project-actions">
+                                <button class="btn" onclick="editProject('${proj.id}')">Editar</button>
+                                <button class="btn muted" onclick="deleteProject('${proj.id}')">Eliminar</button>
+                            </div>
+                        `;
+                        projectsGrid.appendChild(card);
+                    });
+
+                    section.appendChild(projectsGrid);
+                    container.appendChild(section);
+                }
+            });
+        }
+
+        function filterProjects() {
+            const searchTerm = document.getElementById('search-projects').value.toLowerCase().trim();
+            if (!allProjectsData) return;
+
+            if (!searchTerm) {
+                renderProjects(allProjectsData);
+                return;
+            }
+
+            const filteredProjects = allProjectsData.filter(proj =>
+                proj.title.toLowerCase().includes(searchTerm) ||
+                proj.desc.toLowerCase().includes(searchTerm) ||
+                proj.status.toLowerCase().includes(searchTerm) ||
+                (proj.etapa && proj.etapa.toLowerCase().includes(searchTerm))
+            );
+
+            renderProjects(filteredProjects);
+        }
+
+        async function editProject(id) {
+            const data = await readData();
+            const proj = data.projects.find(p => p.id === id);
+            if (!proj) return;
+
+            // Llenar formulario
+            document.getElementById('proj-title').value = proj.title || '';
+            document.getElementById('proj-desc').value = proj.desc || '';
+            document.getElementById('proj-date').value = proj.date || '';
+            document.getElementById('proj-status').value = proj.status || 'En curso';
+            document.getElementById('proj-etapa').value = proj.etapa || 'etapa_1';
+
+            // Mostrar participantes si hay
+            if (proj.participants) {
+                // Lógica para participantes
+            }
+
+            // Cambiar botón a actualizar
+            currentEditId = id;
+            const addBtn = document.getElementById('add-proj');
+            addBtn.textContent = 'Actualizar Proyecto';
+
+            const cancelBtn = document.getElementById('cancel-proj');
+            cancelBtn.classList.remove('hidden');
+            cancelBtn.onclick = clearForm;
+        }
+
+        async function updateProject(id) {
+            const title = document.getElementById('proj-title').value.trim();
+            const desc = document.getElementById('proj-desc').value.trim();
+            const date = document.getElementById('proj-date').value;
+            const status = document.getElementById('proj-status').value;
+            const etapa = document.getElementById('proj-etapa').value;
+
+            if (!title || !desc) {
+                showNotification('Título y descripción son obligatorios.', 'error');
+                return;
+            }
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('projects')
+                    .update({ title, desc, date, status, etapa })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('Proyecto actualizado correctamente.');
+                clearForm();
+                document.getElementById('search-projects').value = ''; // Limpiar búsqueda
+                await loadAndRenderProjects();
+            } catch (e) {
+                console.error(e);
+                showNotification('Error al actualizar proyecto.', 'error');
+            }
+        }
+
+        async function deleteProject(id) {
+            if (!confirm('¿Estás seguro de eliminar este proyecto?')) return;
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('projects')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('Proyecto eliminado correctamente.');
+                document.getElementById('search-projects').value = ''; // Limpiar búsqueda
+                await loadAndRenderProjects();
+            } catch (e) {
+                console.error(e);
+                showNotification('Error al eliminar proyecto.', 'error');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.className = `notification ${type}`;
+            notif.classList.remove('hidden');
+            setTimeout(() => notif.classList.add('hidden'), 3000);
+        }
+
+        async function addOrUpdateProject() {
+            const title = document.getElementById('proj-title').value.trim();
+            const desc = document.getElementById('proj-desc').value.trim();
+            const date = document.getElementById('proj-date').value;
+            const status = document.getElementById('proj-status').value;
+            const etapa = document.getElementById('proj-etapa').value;
+
+            if (!title || !desc) {
+                showNotification('Título y descripción son obligatorios.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('add-proj');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            try {
+                if (currentEditId) {
+                    // Update
+                    const { error } = await window.supabaseClient
+                        .from('projects')
+                        .update({ title, desc, date, status, etapa })
+                        .eq('id', currentEditId);
+
+                    if (error) throw error;
+                    showNotification('Proyecto actualizado correctamente.');
+                } else {
+                    // Insert
+                    const { error } = await window.supabaseClient
+                        .from('projects')
+                        .insert([{ title, desc, date, status, etapa }]);
+
+                    if (error) throw error;
+                    showNotification('Proyecto agregado correctamente.');
+                }
+
+                clearForm();
+                document.getElementById('search-projects').value = ''; // Limpiar búsqueda
+                await loadAndRenderProjects();
+            } catch (e) {
+                console.error(e);
+                showNotification('Error al guardar proyecto.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('proj-title').value = '';
+            document.getElementById('proj-desc').value = '';
+            document.getElementById('proj-date').value = '';
+            document.getElementById('proj-status').value = 'En curso';
+            document.getElementById('proj-etapa').value = 'etapa_1';
+            document.getElementById('add-proj').textContent = 'Guardar Proyecto';
+            document.getElementById('cancel-proj').classList.add('hidden');
+            currentEditId = null;
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type === 'error' ? 'error' : ''}`;
+            notification.classList.remove('hidden');
+
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 5000);
+        }
+
+        // Función para escapar HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Función para hacer scroll hacia arriba
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>

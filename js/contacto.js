@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // 2. Guardar en la bóveda de Supabase para el panel Admin
-                const { error } = await supabase.from('contacts').insert([payload]);
+                const { error } = await window.supabaseClient.from('contacts').insert([payload]);
                 if (error) throw error;
                 
                 // 3. Enviar alerta silenciosa por correo usando EmailJS (REST API)
@@ -151,7 +151,7 @@ window.renderContactAdminList = function(contactsData) {
             // Botón: Borrar (Archivar) con manejo de errores
             mDiv.querySelector('.del-msg-btn').onclick = async () => {
                 if(confirm('¿Seguro que deseas eliminar este mensaje de la bandeja permanentemente?')) {
-                    const { error } = await supabase.from('contacts').delete().eq('id', msg.id);
+                    const { error } = await window.supabaseClient.from('contacts').delete().eq('id', msg.id);
                     if (error) alert('🚨 Error borrando: ' + error.message);
                     else if(typeof loadAdminLists === 'function') loadAdminLists(); 
                 }
@@ -165,7 +165,7 @@ window.renderContactAdminList = function(contactsData) {
 // Función interna mejorada para actualizar el estado
 async function updateTicketStatus(id, newStatus) {
     try {
-        const { error } = await supabase.from('contacts').update({ status: newStatus }).eq('id', id);
+        const { error } = await window.supabaseClient.from('contacts').update({ status: newStatus }).eq('id', id);
         
         // Si Supabase se queja, que nos diga exactamente por qué
         if (error) {

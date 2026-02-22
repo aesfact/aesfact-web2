@@ -1,15 +1,10 @@
 // js/sysadmin.js
 // Lógica exclusiva del Panel "God Mode"
 
-const SUPABASE_URL = 'https://vjdwzfvvbybwwymtqoym.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHd6ZnZ2Ynlid3d5bXRxb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzU4NDgsImV4cCI6MjA4NzA1MTg0OH0.mjdhTGIBv4BpMbYKMdeTzmssekDxjKsTmFkkas692C4';
-
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 const MODULOS_DISPONIBLES = ['mantenimiento', 'nosotros', 'proyectos', 'eventos', 'noticias', 'contactos', 'finanzas', 'integrantes', 'aesfact', 'panel_sysadmin'];
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
     const localRole = sessionStorage.getItem('aesfact_role');
 
     if (!session || localRole !== 'SysAdmin') {
@@ -35,7 +30,7 @@ window.switchTab = (tabId) => {
 // ==========================================
 async function loadUsers() {
     const tbody = document.getElementById('users-table-body');
-    const { data, error } = await supabase.rpc('get_all_admin_users');
+    const { data, error } = await window.supabaseClient.rpc('get_all_admin_users');
     
     if (error) { tbody.innerHTML = `<tr><td colspan="4" style="color:red;">Error: ${error.message}</td></tr>`; return; }
 
@@ -79,7 +74,7 @@ window.saveUser = async (uid) => {
 
     if(!confirm(`¿Guardar cambios para este usuario?`)) return;
 
-    const { error } = await supabase.rpc('update_user_access', {
+    const { error } = await window.supabaseClient.rpc('update_user_access', {
         target_uid: uid,
         new_role: newRole,
         new_status: newStatus,
@@ -95,7 +90,7 @@ window.saveUser = async (uid) => {
 // ==========================================
 async function loadPermissions() {
     const grid = document.getElementById('permissions-grid');
-    const { data, error } = await supabase.from('role_permissions').select('*').order('role');
+    const { data, error } = await window.supabaseClient.from('role_permissions').select('*').order('role');
     if (error) { grid.innerHTML = 'Error cargando matriz.'; return; }
 
     grid.innerHTML = '';
@@ -128,7 +123,7 @@ async function loadPermissions() {
 window.savePermissions = async (roleName) => {
     const checkboxes = document.querySelectorAll(`.chk-${roleName}:checked`);
     const newModules = Array.from(checkboxes).map(chk => chk.value);
-    const { error } = await supabase.rpc('update_role_permissions', { target_role: roleName, new_modules: newModules });
+    const { error } = await window.supabaseClient.rpc('update_role_permissions', { target_role: roleName, new_modules: newModules });
     if (error) alert(`Error: ${error.message}`);
     else alert(`✅ Permisos de ${roleName} actualizados.`);
 };
@@ -140,7 +135,7 @@ window.loadLogs = async () => {
     const tbody = document.getElementById('logs-table-body');
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Cargando...</td></tr>';
 
-    const { data, error } = await supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(100); 
+    const { data, error } = await window.supabaseClient.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(100); 
 
     if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:red;">Error: ${error.message}</td></tr>`; return; }
     if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay actividad registrada aún.</td></tr>'; return; }

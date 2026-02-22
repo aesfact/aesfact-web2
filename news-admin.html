@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Noticias - AESFACT</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+    <style>
+        :root {
+            --dark-blue: #04293a;
+        }
+        body { background-color: #f4f7f6; }
+        .news-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .news-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .news-section {
+            background: white; padding: 30px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px;
+        }
+        .news-section h3 { margin-top: 0; color: var(--dark-blue); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn { background: var(--dark-blue); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: #0d5d9e; }
+        .notification {
+            position: fixed; top: 20px; right: 20px; background: #4caf50; color: white; padding: 15px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000; transition: all 0.3s;
+        }
+        .notification.error { background: #f44336; }
+        .notification.hidden { opacity: 0; pointer-events: none; }
+        .file-upload-wrapper { position: relative; }
+        .file-upload-wrapper input { opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer; }
+        .file-upload-wrapper::before { content: '📎 Seleccionar imagen'; display: block; padding: 10px; border: 2px dashed #ccc; border-radius: 6px; text-align: center; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div style="background: white; padding: 15px; border-bottom: 1px solid #eee;">
+        <div class="news-container" style="padding: 0; display: flex; justify-content: space-between; align-items: center;">
+            <a href="admin.html" style="text-decoration: none; color: #555; font-weight: bold;">← Volver al Admin</a>
+            <h2 style="margin: 0; color: var(--dark-blue);">Gestión de Noticias</h2>
+        </div>
+    </div>
+
+    <div class="news-container">
+        <section class="news-section">
+            <h3>Agregar/Editar Noticia</h3>
+            <div class="form-grid">
+                <div>
+                    <label>📌 Título de la Noticia</label>
+                    <input id="news-title" placeholder="Título principal">
+                </div>
+                <div>
+                    <label>📅 Fecha de Publicación</label>
+                    <input id="news-date" type="date">
+                </div>
+            </div>
+            <label>📝 Contenido</label>
+            <textarea id="news-body" placeholder="Cuerpo de la noticia..." rows="4"></textarea>
+            
+            <label class="muted">🔗 URL de imagen (opcional)</label>
+            <input id="news-image-url" placeholder="https://ejemplo.com/imagen.jpg">
+            
+            <label class="muted">📸 O sube una imagen desde tu equipo:</label>
+            <div class="file-upload-wrapper">
+                <input id="news-image-file" type="file" accept="image/*">
+            </div>
+            
+            <div class="admin-actions" style="margin-top: 10px;">
+                <button id="add-news" class="btn" onclick="addOrUpdateNews()">Publicar Noticia</button>
+                <button id="cancel-news" class="btn muted hidden">Cancelar</button>
+            </div>
+            <div id="news-admin-list" style="margin-top: 20px;"></div>
+        </section>
+    </div>
+
+    </div>
+
+    <div id="notification" class="notification hidden"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Inicializar Supabase
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar permisos
+            const permsRaw = sessionStorage.getItem('aesfact_permissions');
+            if (!permsRaw || !JSON.parse(permsRaw).includes('noticias')) {
+                alert('⛔ Acceso Restringido: No tienes permisos para gestionar noticias.');
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            // Verificar sesión de Supabase
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+            console.log('🔐 Session check:', session ? 'ACTIVE' : 'EXPIRED');
+            if (!session) {
+                alert('Sesión expirada. Ve a admin.html para iniciar sesión nuevamente.');
+                window.location.href = 'admin.html';
+                return;
+            }
+
+            // Cargar y mostrar noticias
+            await loadAndRenderNews();
+        });
+
+        async function loadAndRenderNews() {
+            console.log('📰 loadAndRenderNews() called');
+            const data = await readData();
+            console.log('📊 News data:', data ? data.news : 'null');
+            if (!data || !data.news) {
+                console.warn('❌ No news data');
+                return;
+            }
+
+            const listContainer = document.getElementById('news-admin-list');
+            listContainer.innerHTML = '';
+
+            data.news.forEach(nws => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h4>${escapeHtml(nws.title)}</h4>
+                    <p class="muted">Fecha: ${nws.date}</p>
+                    <p>${escapeHtml(nws.body.substring(0, 100))}...</p>
+                    <button class="btn" onclick="editNews('${nws.id}')">Editar</button>
+                    <button class="btn muted" onclick="deleteNews('${nws.id}')">Eliminar</button>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        async function editNews(id) {
+            const data = await readData();
+            const nws = data.news.find(n => n.id === id);
+            if (!nws) return;
+
+            document.getElementById('news-title').value = nws.title || '';
+            document.getElementById('news-date').value = nws.date || '';
+            document.getElementById('news-body').value = nws.body || '';
+            document.getElementById('news-image-url').value = nws.image || '';
+
+            currentEditId = id;
+            const addBtn = document.getElementById('add-news');
+            addBtn.textContent = 'Actualizar Noticia';
+
+            const cancelBtn = document.getElementById('cancel-news');
+            cancelBtn.classList.remove('hidden');
+            cancelBtn.onclick = clearNewsForm;
+        }
+
+        async function updateNews(id) {
+            const title = document.getElementById('news-title').value.trim();
+            const date = document.getElementById('news-date').value;
+            const body = document.getElementById('news-body').value.trim();
+            const image = document.getElementById('news-image-url').value.trim();
+
+            if (!title || !date || !body) {
+                showNotification('Título, fecha y contenido son obligatorios.', 'error');
+                return;
+            }
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('news')
+                    .update({ title, date, body, image })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('Noticia actualizada correctamente.');
+                clearNewsForm();
+                await loadAndRenderNews();
+            } catch (e) {
+                console.error(e);
+                showNotification('Error al actualizar noticia.', 'error');
+            }
+        }
+
+        async function deleteNews(id) {
+            if (!confirm('¿Estás seguro de eliminar esta noticia?')) return;
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('news')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showNotification('Noticia eliminada correctamente.');
+                await loadAndRenderNews();
+            } catch (e) {
+                console.error(e);
+                showNotification('Error al eliminar noticia.', 'error');
+            }
+        }
+
+        function clearNewsForm() {
+            document.getElementById('news-title').value = '';
+            document.getElementById('news-date').value = '';
+            document.getElementById('news-body').value = '';
+            document.getElementById('news-image-url').value = '';
+            document.getElementById('add-news').textContent = 'Publicar Noticia';
+            document.getElementById('cancel-news').classList.add('hidden');
+            currentEditId = null;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.className = `notification ${type}`;
+            notif.classList.remove('hidden');
+            setTimeout(() => notif.classList.add('hidden'), 3000);
+        }
+
+        async function addOrUpdateNews() {
+            const title = document.getElementById('news-title').value.trim();
+            const date = document.getElementById('news-date').value;
+            const body = document.getElementById('news-body').value.trim();
+            const image = document.getElementById('news-image-url').value.trim();
+
+            if (!title || !date || !body) {
+                showNotification('Título, fecha y contenido son obligatorios.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('add-news');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            try {
+                if (currentEditId) {
+                    // Update
+                    const { error } = await window.supabaseClient
+                        .from('news')
+                        .update({ title, date, body, image })
+                        .eq('id', currentEditId);
+
+                    if (error) throw error;
+                    showNotification('Noticia actualizada correctamente.');
+                } else {
+                    // Insert
+                    const { error } = await window.supabaseClient
+                        .from('news')
+                        .insert([{ title, date, body, image }]);
+
+                    if (error) throw error;
+                    showNotification('Noticia agregada correctamente.');
+                }
+
+                clearNewsForm();
+                await loadAndRenderNews();
+            } catch (e) {
+                console.error(e);
+                showNotification('Error al guardar noticia.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+    </script>
