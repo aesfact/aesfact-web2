@@ -1,45 +1,44 @@
-// app.js - VERSIÓN DEFINITIVA (CON ROADMAP DINÁMICO, FILTROS Y CÁLCULO DE PROGRESO)
+// app.js - VERSIÓN DE RESCATE (MOTOR GLOBAL RESTAURADO)
 // ============================================================
 
 const SUPABASE_URL = 'https://vjdwzfvvbybwwymtqoym.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHd6ZnZ2Ynlid3d5bXRxb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzU4NDgsImV4cCI6MjA4NzA1MTg0OH0.mjdhTGIBv4BpMbYKMdeTzmssekDxjKsTmFkkas692C4';
 
-let supabase = null;
-let currentEditId = null;
-let tempParticipants = [];
-let tempGallery = [];
+// 1. INICIALIZACIÓN GLOBAL FORZADA
+if (window.supabase) {
+    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('✅ Supabase conectado globalmente');
+} else {
+    console.error('❌ Librería Supabase no encontrada');
+}
 
 // --- INICIO PRINCIPAL ---
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Iniciando AESFACT App...');
     
-    await initSupabase();
+    setupRealtime();
 
     const stopRendering = await checkMaintenanceModeGuard();
     if (stopRendering) return; 
 
-    await renderPublic(); 
-    bindSidebar();
-    renderNav();
-    bindNewsModal();
+    // Solo renderizar lo público si estamos en una página pública (donde existe el footer/nav)
+    if(document.getElementById('sidebar-nav')) {
+        await renderPublic(); 
+        bindSidebar();
+        renderNav();
+        bindNewsModal();
+    }
     
     // 🔥 EL EASTER EGG PRO (3 CLICS RÁPIDOS) 🔥
     const adminTrigger = document.getElementById('admin-trigger');
     if (adminTrigger) {
         let clickCount = 0;
         let clickTimer = null;
-        
         adminTrigger.addEventListener('click', () => {
-            clickCount++; // Sumamos un clic
-            
-            // Si es el primer clic, iniciamos un reloj de medio segundo
+            clickCount++;
             if (clickCount === 1) {
-                clickTimer = setTimeout(() => { 
-                    clickCount = 0; // Si pasa medio segundo y no completó los 3 clics, se resetea
-                }, 600); 
+                clickTimer = setTimeout(() => { clickCount = 0; }, 600); 
             }
-            
-            // Si logra hacer 3 clics rápidos antes de que acabe el tiempo... ¡Bum!
             if (clickCount === 3) {
                 clearTimeout(clickTimer);
                 window.location.href = 'admin.html';
@@ -47,44 +46,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
     
-    if (document.body.classList.contains('admin')) {
-        initSupabase();
+    // Si estamos en el index del admin (el login)
+    if (document.getElementById('login-panel')) {
         initAdmin();
     }
 });
 
-async function initSupabase() {
-    if (window.supabase) {
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('✅ Supabase conectado');
-        setupRealtime();
-    } else console.error('❌ Librería Supabase no encontrada');
-}
-
 // --- LÓGICA DEL GUARDIA ---
 async function checkMaintenanceModeGuard() {
     const path = window.location.pathname;
-
-    if (path.includes('mantenimiento.html') || 
-        path.includes('login.html') || 
-        path.includes('admin.html')) { 
+    if (path.includes('mantenimiento.html') || path.includes('login.html') || path.includes('admin.html') || path.includes('-admin.html')) { 
         return false; 
     }
 
     try {
-        const { data, error } = await window.supabaseClient
-            .from('site_controls')
-            .select('is_enabled')
-            .eq('control_name', 'maintenance_mode')
-            .maybeSingle();
-
-        const isMaintenanceOn = data ? data.is_enabled : false;
-
-        if (isMaintenanceOn) {
+        const { data } = await window.supabaseClient.from('site_controls').select('is_enabled').eq('control_name', 'maintenance_mode').maybeSingle();
+        if (data && data.is_enabled) {
             const isAdmin = sessionStorage.getItem('aesfact_role'); 
-            
             if (isAdmin) {
-                console.log('🛡️ Mantenimiento ACTIVO (Admin Acceso).');
                 mostrarAvisoAdmin(); 
                 return false; 
             } else {
@@ -106,49 +85,34 @@ function mostrarAvisoAdmin() {
 function setupRealtime() {
     if (!window.supabaseClient) return;
     window.supabaseClient.channel('custom-all-channel').on('postgres_changes', { event: '*', schema: 'public' }, () => {
-        renderPublic();
-        if (document.body.classList.contains('admin') && !document.getElementById('admin-panel').classList.contains('hidden')) {
-            loadAdminLists();
-        }
+        if(document.getElementById('sidebar-nav')) renderPublic();
     }).subscribe();
 }
 
-// --- UTILIDADES DE STORAGE ---
-async function uploadImageToStorage(file, folderName) {
+// --- UTILIDADES DE STORAGE (CRÍTICAS PARA IMÁGENES) ---
+window.uploadImageToStorage = async function(file, folderName) {
     try {
         const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '_').toLowerCase();
         const filePath = `${folderName}/${Date.now()}_${cleanName}`;
-        
         const { data, error } = await window.supabaseClient.storage.from('media').upload(filePath, file, { cacheControl: '3600', upsert: false });
         if (error) throw error;
-        
         const { data: { publicUrl } } = window.supabaseClient.storage.from('media').getPublicUrl(filePath);
         return publicUrl;
     } catch (e) { console.error(e); alert('Error subiendo imagen'); return null; }
-}
+};
 
-function getFilePathFromUrl(url) {
+window.deleteFileFromStorage = async function(url) {
     if (!url || !url.includes('/storage/v1/object/public/media/')) return null;
-    const path = url.split('/storage/v1/object/public/media/')[1];
-    return decodeURIComponent(path);
-}
-
-async function deleteFileFromStorage(url) {
-    const path = getFilePathFromUrl(url);
+    const path = decodeURIComponent(url.split('/storage/v1/object/public/media/')[1]);
     if (path) {
         const { error } = await window.supabaseClient.storage.from('media').remove([path]);
-        if (error) console.error('Error borrando archivo de storage:', error.message);
-        else console.log('✅ Archivo eliminado correctamente:', path);
+        if (error) console.error('Error borrando archivo:', error.message);
     }
-}
+};
 
-// --- MANEJO DE DATOS PÚBLICOS ---
-async function readData() {
-    console.log('🔍 readData() called');
-    if (!window.supabaseClient) {
-        console.error('❌ Supabase not initialized');
-        return null;
-    }
+// --- MANEJO DE DATOS GLOBALES ---
+window.readData = async function() {
+    if (!window.supabaseClient) return null;
     const dataStore = { mision:'', vision:'', valores:[], politica:'', objetivos:[], objetivos_calidad:[], news:[], projects:[], events:[], members:[], aesfact:{year:'',image:''}, gallery:[], contacts:[] };
     try {
         const queries = [
@@ -159,8 +123,6 @@ async function readData() {
             window.supabaseClient.from('members').select('*'),
             window.supabaseClient.from('aesfact').select('*').eq('id', 'aesfact').single()
         ];
-        
-        // Si es Admin, también traemos los mensajes
         if (sessionStorage.getItem('aesfact_role')) {
             queries.push(window.supabaseClient.from('contacts').select('*').order('date', { ascending: false }));
         }
@@ -173,24 +135,12 @@ async function readData() {
         dataStore.news=nw.data||[]; dataStore.projects=pr.data||[]; dataStore.events=ev.data||[]; dataStore.members=me.data||[];
         if(ae.data) dataStore.aesfact=ae.data;
         if(co && co.data) dataStore.contacts = co.data; 
-
-        console.log('📊 Data loaded:', {
-            news: dataStore.news.length,
-            projects: dataStore.projects.length,
-            events: dataStore.events.length,
-            members: dataStore.members.length,
-            contacts: dataStore.contacts.length
-        });
-
         if(dataStore.aesfact.image) dataStore.gallery.push(dataStore.aesfact.image);
         dataStore.news.forEach(n=>{if(n.image)dataStore.gallery.push(n.image)});
-        
         return dataStore;
-    } catch(e) {
-        console.error('❌ Error in readData():', e);
-        return null;
-    }
-}
+    } catch(e) { return null; }
+};
+
 
 async function renderPublic() {
     const data = await readData(); if (!data) return;

@@ -7,15 +7,17 @@ let financeChart = null;
 let currentEditId = null;
 
 // --- INICIALIZACIÓN SEGURA ---
+// --- INICIALIZACIÓN SEGURA ---
 document.addEventListener('DOMContentLoaded', async () => {
 
-    // 1. Verificar sesión real de Supabase (Ya no usamos el sessionStorage inseguro)
+    // 1. Verificar sesión real de Supabase
     const { data: { session } } = await window.supabaseClient.auth.getSession();
+    if (!session) { // ¡ESTA ERA LA LÍNEA QUE BORRARON POR ACCIDENTE!
         window.location.href = 'admin.html';
         return;
     }
 
-    // 2. Verificar que tenga permiso de "finanzas" en su lista
+    // 2. Verificar que tenga permiso de "finanzas"
     const permsRaw = sessionStorage.getItem('aesfact_permissions');
     if (!permsRaw || !JSON.parse(permsRaw).includes('finanzas')) {
         alert('⛔ Acceso Restringido: Tu rol no tiene permisos de Tesorería.');

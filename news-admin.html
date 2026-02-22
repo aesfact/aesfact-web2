@@ -195,29 +195,29 @@
             }
         }
 
-        function clearNewsForm() {
-            document.getElementById('news-title').value = '';
-            document.getElementById('news-date').value = '';
-            document.getElementById('news-body').value = '';
-            document.getElementById('news-image-url').value = '';
-            document.getElementById('add-news').textContent = 'Publicar Noticia';
-            document.getElementById('cancel-news').classList.add('hidden');
-            currentEditId = null;
-        }
+        // 1. EVENTO PARA PREVISUALIZAR LA IMAGEN ANTES DE SUBIR
+        document.getElementById('news-image-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.querySelector('.file-upload-wrapper');
+                    wrapper.style.backgroundImage = `url(${e.target.result})`;
+                    wrapper.style.backgroundSize = 'cover';
+                    wrapper.style.backgroundPosition = 'center';
+                    wrapper.style.color = 'transparent'; // Oculta el texto de "Seleccionar imagen"
+                }
+                reader.readAsDataURL(file);
+            }
+        });
 
-        function showNotification(message, type = 'success') {
-            const notif = document.getElementById('notification');
-            notif.textContent = message;
-            notif.className = `notification ${type}`;
-            notif.classList.remove('hidden');
-            setTimeout(() => notif.classList.add('hidden'), 3000);
-        }
-
+        // 2. FUNCIÓN DE GUARDADO CON SOPORTE PARA STORAGE
         async function addOrUpdateNews() {
             const title = document.getElementById('news-title').value.trim();
             const date = document.getElementById('news-date').value;
             const body = document.getElementById('news-body').value.trim();
-            const image = document.getElementById('news-image-url').value.trim();
+            let imageUrl = document.getElementById('news-image-url').value.trim();
+            const fileInput = document.getElementById('news-image-file');
 
             if (!title || !date || !body) {
                 showNotification('Título, fecha y contenido son obligatorios.', 'error');
@@ -227,23 +227,29 @@
             const btn = document.getElementById('add-news');
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = 'Guardando...';
+            btn.textContent = 'Subiendo imagen...';
 
             try {
+                // MAGIA RESTAURADA: Subir el archivo si se seleccionó uno
+                if (fileInput.files.length > 0) {
+                    const uploadedUrl = await window.uploadImageToStorage(fileInput.files[0], 'noticias');
+                    if (uploadedUrl) imageUrl = uploadedUrl;
+                }
+
+                btn.textContent = 'Guardando datos...';
+
                 if (currentEditId) {
-                    // Update
                     const { error } = await window.supabaseClient
                         .from('news')
-                        .update({ title, date, body, image })
+                        .update({ title, date, body, image: imageUrl })
                         .eq('id', currentEditId);
 
                     if (error) throw error;
                     showNotification('Noticia actualizada correctamente.');
                 } else {
-                    // Insert
                     const { error } = await window.supabaseClient
                         .from('news')
-                        .insert([{ title, date, body, image }]);
+                        .insert([{ title, date, body, image: imageUrl }]);
 
                     if (error) throw error;
                     showNotification('Noticia agregada correctamente.');
@@ -259,4 +265,26 @@
                 btn.textContent = originalText;
             }
         }
+
+        // 3. LIMPIEZA ACTUALIZADA PARA QUITAR LA PREVISUALIZACIÓN AL CANCELAR O GUARDAR
+        function clearNewsForm() {
+            document.getElementById('news-title').value = '';
+            document.getElementById('news-date').value = '';
+            document.getElementById('news-body').value = '';
+            document.getElementById('news-image-url').value = '';
+            document.getElementById('news-image-file').value = '';
+            
+            // Quitar el preview visual
+            const wrapper = document.querySelector('.file-upload-wrapper');
+            if(wrapper) {
+                wrapper.style.backgroundImage = 'none';
+                wrapper.style.color = ''; 
+            }
+
+            document.getElementById('add-news').textContent = 'Publicar Noticia';
+            document.getElementById('cancel-news').classList.add('hidden');
+            currentEditId = null;
+        }
+
+        
     </script>

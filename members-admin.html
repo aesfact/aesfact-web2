@@ -773,16 +773,7 @@
             }
         }
 
-        function clearMemberForm() {
-            document.getElementById('mem-name').value = '';
-            document.getElementById('mem-role').value = '';
-            document.getElementById('mem-email').value = '';
-            document.getElementById('mem-phone').value = '';
-            document.getElementById('mem-photo-url').value = '';
-            document.getElementById('add-mem').textContent = 'Guardar Integrante';
-            document.getElementById('cancel-mem').classList.add('hidden');
-            currentEditId = null;
-        }
+    
 
         function showNotification(message, type = 'success') {
             const notif = document.getElementById('notification');
@@ -792,11 +783,31 @@
             setTimeout(() => notif.classList.add('hidden'), 3000);
         }
 
+        // 1. EVENTO PARA PREVISUALIZAR LA FOTO DE PERFIL ANTES DE SUBIR
+        document.getElementById('mem-photo-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.querySelector('.file-upload-wrapper');
+                    wrapper.style.backgroundImage = `url(${e.target.result})`;
+                    wrapper.style.backgroundSize = 'contain';
+                    wrapper.style.backgroundRepeat = 'no-repeat';
+                    wrapper.style.backgroundPosition = 'center';
+                    wrapper.style.color = 'transparent'; // Oculta el texto
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 2. FUNCIÓN DE GUARDADO CON SOPORTE PARA STORAGE
         async function addOrUpdateMember() {
             const name = document.getElementById('mem-name').value.trim();
             const role = document.getElementById('mem-role').value.trim();
             const email = document.getElementById('mem-email').value.trim();
             const phone = document.getElementById('mem-phone').value.trim();
+            let photoUrl = document.getElementById('mem-photo-url').value.trim();
+            const fileInput = document.getElementById('mem-photo-file');
 
             if (!name || !role || !email) {
                 showNotification('Nombre, rol y email son obligatorios.', 'error');
@@ -806,23 +817,29 @@
             const btn = document.getElementById('add-mem');
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = 'Guardando...';
+            btn.textContent = 'Subiendo foto...';
 
             try {
+                // MAGIA RESTAURADA: Subir el archivo de la foto
+                if (fileInput.files.length > 0) {
+                    const uploadedUrl = await window.uploadImageToStorage(fileInput.files[0], 'integrantes');
+                    if (uploadedUrl) photoUrl = uploadedUrl;
+                }
+
+                btn.textContent = 'Guardando datos...';
+
                 if (currentEditId) {
-                    // Update
                     const { error } = await window.supabaseClient
                         .from('members')
-                        .update({ name, role, email, phone })
+                        .update({ name, role, email, phone, photo: photoUrl }) // Aquí se inyecta la URL de la foto
                         .eq('id', currentEditId);
 
                     if (error) throw error;
                     showNotification('Integrante actualizado correctamente.');
                 } else {
-                    // Insert
                     const { error } = await window.supabaseClient
                         .from('members')
-                        .insert([{ name, role, email, phone }]);
+                        .insert([{ name, role, email, phone, photo: photoUrl }]);
 
                     if (error) throw error;
                     showNotification('Integrante agregado correctamente.');
@@ -837,6 +854,27 @@
                 btn.disabled = false;
                 btn.textContent = originalText;
             }
+        }
+
+        // 3. LIMPIEZA ACTUALIZADA PARA QUITAR LA PREVISUALIZACIÓN DE LA FOTO
+        function clearMemberForm() {
+            document.getElementById('mem-name').value = '';
+            document.getElementById('mem-role').value = '';
+            document.getElementById('mem-email').value = '';
+            document.getElementById('mem-phone').value = '';
+            document.getElementById('mem-photo-url').value = '';
+            document.getElementById('mem-photo-file').value = '';
+            
+            // Quitar el preview visual
+            const wrapper = document.querySelector('.file-upload-wrapper');
+            if(wrapper) {
+                wrapper.style.backgroundImage = 'none';
+                wrapper.style.color = ''; 
+            }
+
+            document.getElementById('add-mem').textContent = 'Guardar Integrante';
+            document.getElementById('cancel-mem').classList.add('hidden');
+            currentEditId = null;
         }
 
         // Función para escapar HTML

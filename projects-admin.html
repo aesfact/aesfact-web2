@@ -607,8 +607,6 @@
             await loadAndRenderProjects();
         });
 
-        let allProjectsData = null;
-
         async function loadAndRenderProjects() {
             console.log('🏗️ loadAndRenderProjects() called');
             const data = await readData();
@@ -920,5 +918,106 @@
                 top: 0,
                 behavior: 'smooth'
             });
+        }
+
+        // VARIABLES GLOBALES RESTAURADAS PARA PROYECTOS
+        let tempParticipants = [];
+        let tempGallery = [];
+        let allProjectsData = null;
+
+        // MOTOR DE PARTICIPANTES RESTAURADO
+        window.addParticipant = (p) => {
+            if(tempParticipants.some(x => x.name === p.name)) return; 
+            tempParticipants.push(p); 
+            renderParts();
+        };
+        
+        window.removeParticipant = (n) => {
+            tempParticipants = tempParticipants.filter(p => p.name !== n); 
+            renderParts();
+        };
+
+        function renderParts() {
+            const l = document.getElementById('proj-participants-list'); 
+            if(!l) return; 
+            l.innerHTML = '';
+            tempParticipants.forEach(p => {
+                const s = document.createElement('span'); 
+                s.style.cssText = `padding:5px 10px;border-radius:15px;font-size:0.85rem;display:flex;align-items:center;gap:5px;${p.type==='member'?'background:#e3f2fd;color:#0d47a1':'background:#eee;color:#444'}`;
+                s.innerHTML = `${p.name} <small>(${p.role||''})</small> <span onclick="removeParticipant('${p.name}')" style="cursor:pointer;font-weight:bold">&times;</span>`;
+                l.appendChild(s);
+            });
+        }
+
+        // CONTROLADOR DEL FORMULARIO DE PROYECTOS RESTAURADO
+        async function addOrUpdateProject() {
+            const title = document.getElementById('proj-title').value.trim();
+            const desc = document.getElementById('proj-desc').value.trim();
+            const date = document.getElementById('proj-date').value;
+            const status = document.getElementById('proj-status').value;
+            const etapa = document.getElementById('proj-etapa').value;
+            const feedback = document.getElementById('proj-feedback').value;
+
+            if (!title || !desc) {
+                showNotification('Título y descripción son obligatorios.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('add-proj');
+            btn.disabled = true;
+            btn.textContent = 'Subiendo archivos...';
+
+            try {
+                // SUBIR MÚLTIPLES IMÁGENES A LA GALERÍA
+                const files = document.getElementById('proj-gallery-files').files;
+                if(files.length > 0){ 
+                    for(let file of files){
+                        const u = await window.uploadImageToStorage(file, 'proyectos'); 
+                        if(u) tempGallery.push(u);
+                    } 
+                }
+
+                const payload = { 
+                    title, desc, date, status, etapa, feedback, 
+                    participants: tempParticipants, 
+                    gallery: tempGallery 
+                };
+
+                btn.textContent = 'Guardando datos...';
+                if (currentEditId) {
+                    const { error } = await window.supabaseClient.from('projects').update(payload).eq('id', currentEditId);
+                    if (error) throw error;
+                    showNotification('Proyecto actualizado.');
+                } else {
+                    const { error } = await window.supabaseClient.from('projects').insert([payload]);
+                    if (error) throw error;
+                    showNotification('Proyecto creado.');
+                }
+
+                clearForm();
+                await loadAndRenderProjects();
+            } catch (e) {
+                console.error(e);
+                showNotification('Error guardando el proyecto', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Guardar Proyecto';
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('proj-title').value = '';
+            document.getElementById('proj-desc').value = '';
+            document.getElementById('proj-date').value = '';
+            document.getElementById('proj-status').value = 'En curso';
+            document.getElementById('proj-etapa').value = 'etapa_1';
+            document.getElementById('proj-feedback').value = '';
+            document.getElementById('proj-gallery-files').value = '';
+            tempParticipants = [];
+            tempGallery = [];
+            renderParts();
+            document.getElementById('proj-gallery-preview').innerHTML = '';
+            currentEditId = null;
+            document.getElementById('add-proj').textContent = 'Guardar Proyecto';
         }
     </script>
