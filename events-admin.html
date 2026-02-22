@@ -145,6 +145,7 @@
 
         // --- EL CRUD CORREGIDO ---
         // --- EL CRUD CORREGIDO DEFINITIVO ---
+        // --- EL CRUD DEFINITIVO (PULIDO Y SIN ALERTAS TÉCNICAS) ---
         async function addOrUpdateEvent() {
             const title = document.getElementById('evt-title').value.trim();
             const dateRaw = document.getElementById('evt-date').value;
@@ -161,32 +162,29 @@
             btn.textContent = 'Guardando...';
 
             try {
-                // Volvemos a la forma original exacta en la que app.js armaba los datos
                 const payload = {
                     title: title,
                     desc: desc,
-                    date: dateRaw || '' // Enviamos texto vacío en lugar de null para evitar el Error 400
+                    date: dateRaw || '' 
                 };
 
                 if (window.currentEditId) {
-                    // Actualizar
                     const { error } = await window.supabaseClient.from('events').update(payload).eq('id', window.currentEditId);
                     if (error) throw error;
-                    showNotification('Evento actualizado.');
+                    showNotification('Evento actualizado correctamente.');
                 } else {
-                    // Insertar con el ID
                     payload.id = Date.now().toString();
                     const { error } = await window.supabaseClient.from('events').insert([payload]);
                     if (error) throw error;
-                    showNotification('Evento agregado.');
+                    showNotification('Evento agregado correctamente.');
                 }
                 clearEventForm();
                 await loadAndRenderEvents();
             } catch (e) { 
+                // El error técnico se queda en la consola en secreto para los desarrolladores
                 console.error("🚨 Error BD:", e);
-                // Si Supabase lo rechaza de nuevo, nos mostrará el motivo exacto en pantalla
-                alert("Detalle del error BD:\n" + JSON.stringify(e, null, 2));
-                showNotification('Error al guardar evento.', 'error'); 
+                // El administrador solo ve un mensaje amigable
+                showNotification('Error al guardar el evento. Verifica los datos.', 'error'); 
             } finally { 
                 btn.disabled = false; 
                 btn.textContent = originalText;
