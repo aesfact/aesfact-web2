@@ -14,9 +14,8 @@
         .members-section h3 { margin-top: 0; color: var(--dark-blue); font-size: 1.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
         label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.85rem; color: var(--text-primary); }
-        input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.9rem; box-sizing: border-box; margin-bottom: 15px; }
-        input:focus { outline: none; border-color: var(--blue-light); box-shadow: 0 0 0 3px rgba(13,93,158,0.1); }
-        .btn { background: linear-gradient(135deg, var(--blue-accent), var(--blue-light)); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-md); cursor: pointer; font-weight: bold; transition: var(--transition); }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.9rem; box-sizing: border-box; margin-bottom: 15px; background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; }
+        input:focus, select:focus { outline: none; border-color: var(--blue-light); box-shadow: 0 0 0 3px rgba(13,93,158,0.1); }.btn { background: linear-gradient(135deg, var(--blue-accent), var(--blue-light)); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-md); cursor: pointer; font-weight: bold; transition: var(--transition); }
         .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn.muted { background: #64748b; }
         .file-upload-wrapper { position: relative; margin-bottom: 10px; }
@@ -55,7 +54,17 @@
                 </div>
                 <div>
                     <label>💼 Cargo / Rol</label>
-                    <input id="mem-role" placeholder="Ej: Presidente">
+                        <select id="mem-role">
+                            <option value="" disabled selected>Selecciona un rol...</option>
+                            <option value="Presidente">Presidente</option>
+                            <option value="Vicepresidente">Vicepresidente</option>
+                            <option value="Secretaría">Secretaría</option>
+                            <option value="Tesorería">Tesorería</option>
+                            <option value="Logística">Logística</option>
+                            <option value="Publirelacionista">Publirelacionista</option>
+                            <option value="Vocal">Vocal</option>
+                            <option value="Colaborador">Colaborador</option>
+                        </select>
                 </div>
                 <div>
                     <label>📧 Correo Electrónico</label>
