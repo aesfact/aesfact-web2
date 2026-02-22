@@ -433,41 +433,50 @@
         async function addOrUpdateProject() {
             const title = document.getElementById('proj-title').value.trim();
             const desc = document.getElementById('proj-desc').value.trim();
-            const date = document.getElementById('proj-date').value;
+            const dateRaw = document.getElementById('proj-date').value;
             const status = document.getElementById('proj-status').value;
             const etapa = document.getElementById('proj-etapa').value;
             const feedback = document.getElementById('proj-feedback').value;
 
-            if (!title || !desc) { showNotification('Título y descripción son obligatorios.', 'error'); return; }
+            if (!title || !desc) { showNotification('Título y descripción obligatorios.', 'error'); return; }
 
             const btn = document.getElementById('add-proj');
             const originalText = btn.textContent;
-            btn.disabled = true; btn.textContent = 'Subiendo archivos...';
+            btn.disabled = true; btn.textContent = 'Guardando...';
 
             try {
-                // 1. Subir archivos nuevos a Supabase Storage y guardar en tempGallery
+                // 1. Subir imágenes si se seleccionaron
                 const files = document.getElementById('proj-gallery-files').files;
                 if(files.length > 0){
+                    btn.textContent = 'Subiendo imágenes...';
                     for(let file of files){
                         const u = await window.uploadImageToStorage(file, 'proyectos'); 
                         if(u) tempGallery.push(u);
                     } 
                 }
 
-                // 2. Preparar el Payload
+                // 2. Preparar el Payload (Manejo seguro de fecha nula)
                 const payload = { 
-                    title, desc, date, status, etapa, feedback, 
-                    participants: tempParticipants, gallery: tempGallery 
+                    title, 
+                    desc, 
+                    date: dateRaw ? dateRaw : null, // Evita error 400 si la fecha está vacía
+                    status, 
+                    etapa, 
+                    feedback, 
+                    participants: tempParticipants, 
+                    gallery: tempGallery 
                 };
 
                 btn.textContent = 'Guardando datos...';
 
-                // 3. Ejecutar actualización o inserción
+                // 3. Ejecutar actualización o inserción con ID seguro
                 if (window.currentEditId) {
                     const { error } = await window.supabaseClient.from('projects').update(payload).eq('id', window.currentEditId);
                     if (error) throw error;
                     showNotification('Proyecto actualizado correctamente.');
                 } else {
+                    // INYECCIÓN DE ID FALTANTE PARA INSERTAR
+                    payload.id = Date.now().toString();
                     const { error } = await window.supabaseClient.from('projects').insert([payload]);
                     if (error) throw error;
                     showNotification('Proyecto creado correctamente.');
@@ -476,8 +485,8 @@
                 clearForm();
                 await loadAndRenderProjects();
             } catch (e) { 
-                console.error(e);
-                showNotification('Error al guardar.', 'error'); 
+                console.error("🚨 Detalle exacto del error BD:", e);
+                showNotification('Error al guardar: ' + (e.message || 'Revisa la consola'), 'error'); 
             } finally { 
                 btn.disabled = false; btn.textContent = originalText; 
             }
