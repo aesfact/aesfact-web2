@@ -144,23 +144,28 @@
         }
 
         // --- EL CRUD CORREGIDO ---
+        // --- EL CRUD CORREGIDO DEFINITIVO ---
         async function addOrUpdateEvent() {
             const title = document.getElementById('evt-title').value.trim();
             const dateRaw = document.getElementById('evt-date').value;
             const desc = document.getElementById('evt-desc').value.trim();
 
-            if (!title || !desc) { showNotification('Título y descripción son obligatorios.', 'error'); return; }
+            if (!title || !desc) { 
+                showNotification('Título y descripción son obligatorios.', 'error'); 
+                return; 
+            }
 
             const btn = document.getElementById('add-evt');
             const originalText = btn.textContent;
-            btn.disabled = true; btn.textContent = 'Guardando...';
+            btn.disabled = true; 
+            btn.textContent = 'Guardando...';
 
             try {
-                // Preparar Payload seguro (soporta fechas vacías)
+                // Volvemos a la forma original exacta en la que app.js armaba los datos
                 const payload = {
-                    title,
-                    date: dateRaw ? dateRaw : null,
-                    desc
+                    title: title,
+                    desc: desc,
+                    date: dateRaw || '' // Enviamos texto vacío en lugar de null para evitar el Error 400
                 };
 
                 if (window.currentEditId) {
@@ -169,7 +174,7 @@
                     if (error) throw error;
                     showNotification('Evento actualizado.');
                 } else {
-                    // Insertar con el ID faltante
+                    // Insertar con el ID
                     payload.id = Date.now().toString();
                     const { error } = await window.supabaseClient.from('events').insert([payload]);
                     if (error) throw error;
@@ -179,6 +184,8 @@
                 await loadAndRenderEvents();
             } catch (e) { 
                 console.error("🚨 Error BD:", e);
+                // Si Supabase lo rechaza de nuevo, nos mostrará el motivo exacto en pantalla
+                alert("Detalle del error BD:\n" + JSON.stringify(e, null, 2));
                 showNotification('Error al guardar evento.', 'error'); 
             } finally { 
                 btn.disabled = false; 
