@@ -1,4 +1,4 @@
-// app.js - VERSIÓN DEFINITIVA (ROLES, MENSAJES Y LIMPIEZA)
+// app.js - VERSIÓN DEFINITIVA (CON ROADMAP DINÁMICO, FILTROS Y CÁLCULO DE PROGRESO)
 // ============================================================
 
 const SUPABASE_URL = 'https://vjdwzfvvbybwwymtqoym.supabase.co';
@@ -9,7 +9,6 @@ let currentEditId = null;
 let tempParticipants = [];
 let tempGallery = [];
 
-// --- INICIO PRINCIPAL ---
 // --- INICIO PRINCIPAL ---
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Iniciando AESFACT App...');
@@ -200,47 +199,199 @@ async function renderPublic() {
     initCarousel(data.news.slice(0,5));
     const gl=document.getElementById('gallery-list');if(gl){gl.innerHTML='';data.gallery.forEach(i=>{const d=document.createElement('div');d.className='gallery-item';d.innerHTML=`<img src="${i}" onclick="openPhotoViewer('${i}')">`;gl.appendChild(d)})}
 
-    // PROYECTOS
-    const pl=document.getElementById('projects-list-container')||document.getElementById('projects-list');
-    if(pl){
-        pl.innerHTML='';
-        if(data.projects.length===0) pl.innerHTML='<div class="card"><p class="muted">No hay proyectos.</p></div>';
-        data.projects.forEach((p,idx)=>{
-            const c=document.createElement('div'); c.className='project-card-wide';
-            let sc='curso'; if(p.status==='Terminado')sc='terminado'; if(p.status==='Cancelado')sc='cancelado';
+    // =========================================================
+    // 🔥 ROADMAP DINÁMICO DE PROYECTOS (FASE 3 - CEREBRO MATEMÁTICO)
+    // =========================================================
+    const pl = document.getElementById('projects-list-container') || document.getElementById('projects-list');
+    if (pl) {
+        // Variables de estado para los filtros (recuerdan qué filtró el usuario)
+        window.currentStageFilter = window.currentStageFilter || 'all';
+        window.currentStatusFilter = window.currentStatusFilter || 'all';
+
+        // 1. Inyectar UI de Filtros arriba de los proyectos si no existe
+        if (!document.getElementById('projects-filter-ui')) {
+            const filterUI = document.createElement('div');
+            filterUI.id = 'projects-filter-ui';
+            filterUI.className = 'projects-filters';
+            filterUI.innerHTML = `
+                <div class="filter-group">
+                    <label>🎯 Filtrar por Etapa Anual</label>
+                    <select id="filter-stage-select" onchange="window.currentStageFilter=this.value; renderFilteredProjects(window.aesfactData.projects);">
+                        <option value="all">🌐 Ver Todas las Etapas</option>
+                        <option value="etapa_1">🔵 Etapa 1: Proyección Académica</option>
+                        <option value="etapa_2">🟢 Etapa 2: Compromiso Ambiental</option>
+                        <option value="etapa_3">🟡 Etapa 3: Responsabilidad Social</option>
+                        <option value="etapa_4">🔴 Etapa 4: Integración y Cierre</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>🚦 Filtrar por Estado del Proyecto</label>
+                    <select id="filter-status-select" onchange="window.currentStatusFilter=this.value; renderFilteredProjects(window.aesfactData.projects);">
+                        <option value="all">⚡ Todos los Estados</option>
+                        <option value="En curso">⏳ Solo En Curso</option>
+                        <option value="Terminado">✅ Solo Terminados</option>
+                        <option value="Cancelado">❌ Solo Cancelados</option>
+                    </select>
+                </div>
+            `;
+            pl.parentNode.insertBefore(filterUI, pl);
+        }
+
+        // Guardar datos globalmente para que los filtros puedan usarlos rápido
+        window.aesfactData = window.aesfactData || {};
+        window.aesfactData.projects = data.projects;
+
+        // 2. Función interna para calcular y dibujar basada en los filtros
+        window.renderFilteredProjects = (allProjects) => {
+            pl.innerHTML = ''; // Limpiar lienzo
             
-            let galHtml='';
-            if(p.gallery&&p.gallery.length>0){
-                const sid=`ps-${idx}`;
-                let slides=''; p.gallery.forEach((g,i)=>slides+=`<div class="project-slide ${i===0?'active':''}" data-i="${i}"><img src="${g}" onclick="openPhotoViewer('${g}')"></div>`);
-                const ctrls=p.gallery.length>1?`<button class="p-nav prev" onclick="moveSlide('${sid}',-1)">&#10094;</button><button class="p-nav next" onclick="moveSlide('${sid}',1)">&#10095;</button><div class="p-counter"><span id="${sid}-c">1</span>/${p.gallery.length}</div>`:'';
-                galHtml=`<div class="project-gallery-wrapper" id="${sid}">${slides}${ctrls}</div>`;
+            // Configuración maestra de colores y títulos
+            const etapas = [
+                { id: 'etapa_1', name: '🔵 ETAPA 1: PROYECCIÓN ACADÉMICA Y TECNOLÓGICA', color: '#0d5d9e' },
+                { id: 'etapa_2', name: '🟢 ETAPA 2: COMPROMISO AMBIENTAL', color: '#2e7d32' },
+                { id: 'etapa_3', name: '🟡 ETAPA 3: RESPONSABILIDAD SOCIAL Y HUMANITARIA', color: '#f57f17' },
+                { id: 'etapa_4', name: '🔴 ETAPA 4: INTEGRACIÓN Y CIERRE ANUAL', color: '#c62828' }
+            ];
+
+            // Sincronizar los selects visualmente
+            document.getElementById('filter-stage-select').value = window.currentStageFilter;
+            document.getElementById('filter-status-select').value = window.currentStatusFilter;
+
+            let etapasToRender = etapas;
+            if (window.currentStageFilter !== 'all') {
+                etapasToRender = etapas.filter(e => e.id === window.currentStageFilter);
             }
 
-            let fbHtml=''; if((p.status==='Terminado'||p.status==='Cancelado')&&p.feedback) fbHtml=`<div class="project-extra"><strong style="color:var(--blue-accent)">${p.status==='Terminado'?'🏁 Resultados / Conclusiones':'⚠️ Motivo de cancelación'}</strong><p style="margin:5px 0 0 0;color:var(--muted)">${escapeHtml(p.feedback)}</p></div>`;
-            
-            let partHtml='';
-            if(p.status==='Terminado'&&p.participants&&p.participants.length>0){
-                let cardsHtml = '';
-                p.participants.forEach(part => {
-                    let photoUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Crect width='50' height='50' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E";
-                    let role = "Voluntario";
-                    let isExt = false;
-                    if (part.type === 'member') {
-                        const realMember = data.members.find(m => m.id === part.id);
-                        if (realMember) {
-                            if (realMember.photo) photoUrl = realMember.photo;
-                            role = realMember.role || part.role;
-                        } else role = part.role;
-                    } else { isExt = true; role = "Externo / Voluntario"; }
-                    cardsHtml += `<div class="mini-member-card ${isExt ? 'external' : ''}"><img src="${photoUrl}" onclick="openPhotoViewer('${photoUrl}')" alt="${escapeHtml(part.name)}"><div class="mini-member-info"><h5>${escapeHtml(part.name)}</h5><p>${escapeHtml(role)}</p></div></div>`;
-                });
-                partHtml = `<div style="margin-top:25px;"><div style="font-size:0.85rem; font-weight:700; color:var(--blue-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">👥 Equipo Participante</div><div class="project-participants-grid">${cardsHtml}</div></div>`;
+            if(allProjects.length === 0) {
+                pl.innerHTML = '<div class="card"><p class="muted">Aún no hay proyectos registrados en el plan anual.</p></div>';
+                return;
             }
 
-            c.innerHTML=`<div class="project-header"><div><h3>${escapeHtml(p.title)}</h3><span class="project-date">📅 ${p.date||'Pendiente'}</span></div><span class="status-badge ${sc}">${p.status}</span></div><div class="project-body">${galHtml}<div class="project-description">${escapeHtml(p.desc).replace(/\n/g,'<br>')}</div>${fbHtml}${partHtml}</div>`;
-            pl.appendChild(c);
-        });
+            etapasToRender.forEach(etapa => {
+                // Proyectos que pertenecen a esta etapa (Base para el porcentaje)
+                const proyectosEtapa = allProjects.filter(p => (p.etapa || 'etapa_1') === etapa.id);
+                
+                // MÁQUINA MATEMÁTICA: Cálculo de Progreso
+                const total = proyectosEtapa.length;
+                const terminados = proyectosEtapa.filter(p => p.status === 'Terminado').length;
+                let porcentaje = total === 0 ? 0 : Math.round((terminados / total) * 100);
+
+                // Filtrado secundario (Qué tarjetas mostrar dentro de la etapa)
+                let proyectosToShow = proyectosEtapa;
+                if (window.currentStatusFilter !== 'all') {
+                    proyectosToShow = proyectosEtapa.filter(p => p.status === window.currentStatusFilter);
+                }
+
+                // Crear el bloque gigante de la Etapa
+                const stageContainer = document.createElement('div');
+                stageContainer.className = 'roadmap-stage';
+                stageContainer.style.borderLeft = `5px solid ${etapa.color}`;
+
+                // Header y Barra de Progreso
+                stageContainer.innerHTML = `
+                    <div class="roadmap-header">
+                        <h2 class="roadmap-title" style="color: ${etapa.color};">${etapa.name}</h2>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="font-weight:bold; color:var(--muted); font-size:0.95rem;">Progreso de la fase</span>
+                            <span style="font-weight:bold; color:${etapa.color}; font-size:1.1rem;">${porcentaje}% <span style="font-size:0.85rem; color:var(--muted);">(${terminados}/${total} Proyectos completados)</span></span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${porcentaje}%; background-color: ${etapa.color};">
+                                ${porcentaje > 5 ? porcentaje + '%' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stage-projects-list"></div>
+                `;
+
+                const listContainer = stageContainer.querySelector('.stage-projects-list');
+
+                if (proyectosToShow.length === 0) {
+                    if (total === 0) {
+                        listContainer.innerHTML = `<div class="empty-stage-msg">Fase en planificación. Próximamente se añadirán proyectos a esta etapa.</div>`;
+                    } else {
+                        listContainer.innerHTML = `<div class="empty-stage-msg">No hay proyectos que coincidan con tus filtros actuales en esta etapa.</div>`;
+                    }
+                } else {
+                    // Renderizar las tarjetas de proyecto
+                    proyectosToShow.forEach((p, idx) => {
+                        const c = document.createElement('div'); c.className = 'project-card-wide';
+                        let sc = 'curso'; if (p.status === 'Terminado') sc = 'terminado'; if (p.status === 'Cancelado') sc = 'cancelado';
+                        
+                        let galHtml = '';
+                        if (p.gallery && p.gallery.length > 0) {
+                            const sid = `ps-${etapa.id}-${idx}`; 
+                            let slides = ''; p.gallery.forEach((g, i) => slides += `<div class="project-slide ${i === 0 ? 'active' : ''}" data-i="${i}"><img src="${g}" onclick="openPhotoViewer('${g}')"></div>`);
+                            const ctrls = p.gallery.length > 1 ? `<button class="p-nav prev" onclick="moveSlide('${sid}',-1)">&#10094;</button><button class="p-nav next" onclick="moveSlide('${sid}',1)">&#10095;</button><div class="p-counter"><span id="${sid}-c">1</span>/${p.gallery.length}</div>` : '';
+                            galHtml = `<div class="project-gallery-wrapper" id="${sid}">${slides}${ctrls}</div>`;
+                        }
+
+                        let fbHtml = ''; if ((p.status === 'Terminado' || p.status === 'Cancelado') && p.feedback) fbHtml = `<div class="project-extra"><strong style="color:var(--blue-accent)">${p.status === 'Terminado' ? '🏁 Resultados / Conclusiones' : '⚠️ Motivo de cancelación'}</strong><p style="margin:5px 0 0 0;color:var(--muted)">${escapeHtml(p.feedback)}</p></div>`;
+                        
+                        let partHtml = '';
+                        if (p.status === 'Terminado' && p.participants && p.participants.length > 0) {
+                            let cardsHtml = '';
+                            p.participants.forEach(part => {
+                                let photoUrl = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Crect width='50' height='50' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E";
+                                let role = "Voluntario";
+                                let isExt = false;
+                                if (part.type === 'member') {
+                                    const realMember = data.members.find(m => m.id === part.id);
+                                    if (realMember) {
+                                        if (realMember.photo) photoUrl = realMember.photo;
+                                        role = realMember.role || part.role;
+                                    } else role = part.role;
+                                } else { isExt = true; role = "Externo / Voluntario"; }
+                                cardsHtml += `<div class="mini-member-card ${isExt ? 'external' : ''}"><img src="${photoUrl}" onclick="openPhotoViewer('${photoUrl}')" alt="${escapeHtml(part.name)}"><div class="mini-member-info"><h5>${escapeHtml(part.name)}</h5><p>${escapeHtml(role)}</p></div></div>`;
+                            });
+                            partHtml = `<div style="margin-top:25px;"><div style="font-size:0.85rem; font-weight:700; color:var(--blue-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">👥 Equipo Participante</div><div class="project-participants-grid">${cardsHtml}</div></div>`;
+                        }
+
+                        c.innerHTML = `<div class="project-header"><div><h3>${escapeHtml(p.title)}</h3><span class="project-date">📅 ${p.date || 'Pendiente'}</span></div><span class="status-badge ${sc}">${p.status}</span></div><div class="project-body">${galHtml}<div class="project-description">${escapeHtml(p.desc).replace(/\n/g, '<br>')}</div>${fbHtml}${partHtml}</div>`;
+                        listContainer.appendChild(c);
+                    });
+                }
+
+                pl.appendChild(stageContainer);
+            });
+        };
+
+        // Renderizado inicial al cargar la página
+        window.renderFilteredProjects(window.aesfactData.projects);
+    }
+
+    // =========================================================
+    // 🔥 LLENADO DE ANILLOS EN EL INICIO (INDEX.HTML)
+    // =========================================================
+    const ringsExist = document.getElementById('ring-etapa-1');
+    if (ringsExist && data.projects) {
+        const calculateStage = (stageId) => {
+            const projs = data.projects.filter(p => (p.etapa || 'etapa_1') === stageId);
+            const total = projs.length;
+            const done = projs.filter(p => p.status === 'Terminado').length;
+            return total === 0 ? 0 : Math.round((done / total) * 100);
+        };
+
+        const p1 = calculateStage('etapa_1');
+        const p2 = calculateStage('etapa_2');
+        const p3 = calculateStage('etapa_3');
+        const p4 = calculateStage('etapa_4');
+
+        // Función para animar el anillo inyectando los grados (360 = 100%)
+        const setRing = (id, val) => {
+            const el = document.getElementById(`ring-etapa-${id}`);
+            const text = document.getElementById(`val-etapa-${id}`);
+            if(el && text) {
+                // Matemáticas: Convertir porcentaje a grados (ej: 50% = 180deg)
+                el.style.setProperty('--prog', `${(val * 360) / 100}deg`);
+                text.textContent = `${val}%`;
+            }
+        };
+
+        // Un pequeño retraso de 300ms para que el usuario alcance a ver cómo se llenan al entrar a la web
+        setTimeout(() => {
+            setRing('1', p1); setRing('2', p2); setRing('3', p3); setRing('4', p4);
+        }, 300);
     }
 }
 
@@ -279,7 +430,6 @@ function initAdmin() {
             loginBtn.disabled = false; loginBtn.textContent = 'Entrar'; return;
         }
 
-        // AHORA PEDIMOS TAMBIÉN EL 'name'
         const { data: roleData, error: roleError } = await supabase
             .from('admin_roles')
             .select('role, status, name') 
@@ -299,7 +449,6 @@ function initAdmin() {
 
         const { data: permData } = await supabase.from('role_permissions').select('allowed_modules').eq('role', roleData.role).single();
 
-        // GUARDAMOS EL NOMBRE TAMBIÉN
         sessionStorage.setItem('aesfact_role', roleData.role);
         sessionStorage.setItem('aesfact_name', roleData.name); 
         if(permData) sessionStorage.setItem('aesfact_permissions', JSON.stringify(permData.allowed_modules));
@@ -327,7 +476,7 @@ async function verificarSesionActiva() {
         if (roleData && roleData.status !== 'pausado') {
             const { data: permData } = await supabase.from('role_permissions').select('allowed_modules').eq('role', roleData.role).single();
             sessionStorage.setItem('aesfact_role', roleData.role);
-            sessionStorage.setItem('aesfact_name', roleData.name); // GUARDAMOS EL NOMBRE
+            sessionStorage.setItem('aesfact_name', roleData.name); 
             if(permData) sessionStorage.setItem('aesfact_permissions', JSON.stringify(permData.allowed_modules));
             iniciarPanelAdmin();
         } else {
@@ -351,7 +500,7 @@ function iniciarPanelAdmin() {
     initMaintenanceControl();
 }
 
-function toggleAdmin(show) { // <-- AQUÍ ESTÁ, A SALVO
+function toggleAdmin(show) { 
     if (show) { 
         document.getElementById('login-panel').classList.add('hidden'); 
         document.getElementById('public-admin-title').classList.add('hidden'); 
@@ -371,7 +520,7 @@ function aplicarPermisosVisuales() {
         'proyectos':     ['a[href="#sec-projects"]', '#sec-projects'],
         'eventos':       ['a[href="#sec-events"]', '#sec-events'],
         'noticias':      ['a[href="#sec-news"]', '#sec-news'],
-        'contactos':     ['a[href="#sec-contacts"]', '#sec-contacts'], // EL DE MENSAJES
+        'contactos':     ['a[href="#sec-contacts"]', '#sec-contacts'], 
         'finanzas':      ['a[href="finanzas.html"]'], 
         'integrantes':   ['a[href="#sec-members"]', '#sec-members'],
         'aesfact':       ['a[href="#sec-aesfact"]', '#sec-aesfact']
@@ -398,7 +547,6 @@ function aplicarPermisosVisuales() {
         const roleTitle = document.createElement('div');
         roleTitle.className = 'role-badge';
         
-        // AHORA MUESTRA EL NOMBRE Y EL ROL
         const userName = sessionStorage.getItem('aesfact_name') || 'Usuario';
         const userRole = sessionStorage.getItem('aesfact_role');
         
@@ -527,10 +675,14 @@ function setupProjectManager(allMembers) {
             const btn=document.getElementById('add-proj'); btn.disabled=true; btn.textContent='Guardando...';
             const t=document.getElementById('proj-title').value; if(!t){alert('Falta título'); btn.disabled=false; return;}
             
+            // CAPTURA DE ETAPA AÑADIDA
+            const etapa = document.getElementById('proj-etapa')?.value || 'etapa_1';
+
             const f=document.getElementById('proj-gallery-files');
             if(f.files.length){ for(let file of f.files){const u=await uploadImageToStorage(file,'proyectos'); if(u)tempGallery.push(u);} }
 
-            const pl={title:t, desc:document.getElementById('proj-desc').value, date:document.getElementById('proj-date').value, status:status.value, feedback:document.getElementById('proj-feedback').value, participants:tempParticipants, gallery:tempGallery};
+            // ETAPA AÑADIDA AL PAYLOAD PL
+            const pl={title:t, desc:document.getElementById('proj-desc').value, date:document.getElementById('proj-date').value, status:status.value, etapa: etapa, feedback:document.getElementById('proj-feedback').value, participants:tempParticipants, gallery:tempGallery};
             
             let err=null;
             if(currentEditId) { const r=await supabase.from('projects').update(pl).eq('id',currentEditId); err=r.error; }
@@ -548,6 +700,10 @@ function resetProj(){
     currentEditId=null;
     ['proj-title','proj-desc','proj-date','proj-feedback','proj-gallery-files','proj-member-search','proj-external-name'].forEach(id=>{const el = document.getElementById(id); if(el) el.value=''});
     const statusEl = document.getElementById('proj-status'); if(statusEl) statusEl.value='En curso';
+    
+    // RESETEAR ETAPA AL VALOR POR DEFECTO
+    const etapaEl = document.getElementById('proj-etapa'); if(etapaEl) etapaEl.value='etapa_1';
+
     ['proj-feedback-section','proj-participants-section','cancel-proj'].forEach(id=>{const el = document.getElementById(id); if(el) el.classList.add('hidden')});
     const addProjEl = document.getElementById('add-proj'); if(addProjEl) addProjEl.textContent='Guardar Proyecto';
     const gpEl = document.getElementById('proj-gallery-preview'); if(gpEl) gpEl.innerHTML=''; 
@@ -560,6 +716,10 @@ function loadProjectToEdit(i){
     document.getElementById('proj-title').value=i.title; document.getElementById('proj-desc').value=i.desc||'';
     document.getElementById('proj-date').value=i.date||''; 
     const st=document.getElementById('proj-status'); st.value=i.status||'En curso'; st.dispatchEvent(new Event('change'));
+    
+    // CARGAR LA ETAPA CORRECTA AL EDITAR
+    const etapaEl = document.getElementById('proj-etapa'); if(etapaEl) etapaEl.value=i.etapa || 'etapa_1';
+
     document.getElementById('proj-feedback').value=i.feedback||'';
     tempParticipants=i.participants||[];
     const l=document.getElementById('proj-participants-list'); l.innerHTML='';

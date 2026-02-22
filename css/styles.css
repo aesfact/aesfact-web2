@@ -573,3 +573,152 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue-lig
     margin-top: 8px;
     font-weight: 500;
 }
+
+/* =========================================
+   ROADMAP DE PROYECTOS Y FILTROS (FASE 3)
+   ========================================= */
+.projects-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    background: var(--card);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 200px;
+}
+.filter-group label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+.filter-group select {
+    margin: 0;
+    border: 2px solid #eef2f6;
+    background-color: #f8faff;
+    color: var(--blue-accent);
+    font-weight: 600;
+}
+.roadmap-stage {
+    margin-bottom: 40px;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.03);
+}
+.roadmap-header {
+    margin-bottom: 25px;
+}
+.roadmap-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0 0 15px 0;
+}
+.progress-container {
+    width: 100%;
+    height: 20px;
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+.progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    color: white;
+    font-weight: bold;
+    font-size: 0.75rem;
+    white-space: nowrap;
+}
+.empty-stage-msg {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+/* =========================================
+   ANILLOS DE PROGRESO - INDEX (FASE 3.5)
+   ========================================= */
+.impact-section {
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.impact-section:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(13, 93, 158, 0.15);
+}
+.impact-section:hover h2 { color: var(--blue-light); }
+
+.rings-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+    margin-bottom: 10px;
+}
+.ring-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 130px;
+}
+/* La magia del anillo en puro CSS */
+.circular-progress {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    /* El degradado cónico se llenará dinámicamente con JS */
+    background: conic-gradient(var(--ring-color) var(--prog), #eef2f6 0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    margin-bottom: 15px;
+    transition: background 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* El hueco del centro para que parezca dona */
+.circular-progress::before {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    background-color: var(--card);
+}
+.ring-value {
+    position: relative;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--blue-accent);
+}
+.ring-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 600px) {
+    .rings-container { gap: 20px; }
+    .ring-box { width: 45%; } /* 2 anillos por fila en celulares */
+}
