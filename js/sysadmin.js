@@ -3,19 +3,28 @@
 
 const MODULOS_DISPONIBLES = ['mantenimiento', 'nosotros', 'proyectos', 'eventos', 'noticias', 'contactos', 'finanzas', 'integrantes', 'aesfact', 'panel_sysadmin'];
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const { data: { session } } = await window.supabaseClient.auth.getSession();
-    const localRole = sessionStorage.getItem('aesfact_role');
+document.addEventListener('DOMContentLoaded', () => {
+    // Le damos a app.js 300ms para que conecte a Supabase tranquilamente
+    setTimeout(async () => {
+        if (!window.supabaseClient) {
+            console.error("Supabase no cargó a tiempo");
+            return;
+        }
 
-    if (!session || localRole !== 'SysAdmin') {
-        alert('⛔ ACCESO RESTRINGIDO. Esta área es exclusiva para el Administrador de Sistemas.');
-        window.location.href = 'admin.html';
-        return;
-    }
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        const localRole = sessionStorage.getItem('aesfact_role');
 
-    loadUsers();
-    loadPermissions();
-    loadLogs();
+        if (!session || localRole !== 'SysAdmin') {
+            alert('⛔ ACCESO RESTRINGIDO. Esta área es exclusiva para el Administrador de Sistemas.');
+            window.location.href = 'admin.html';
+            return;
+        }
+
+        // Si pasó los controles, cargamos el panel
+        loadUsers();
+        loadPermissions();
+        loadLogs();
+    }, 300);
 });
 
 window.switchTab = (tabId) => {
@@ -26,7 +35,7 @@ window.switchTab = (tabId) => {
 };
 
 // ==========================================
-// 1. GESTIÓN DE USUARIOS (AHORA CON NOMBRE)
+// 1. GESTIÓN DE USUARIOS
 // ==========================================
 async function loadUsers() {
     const tbody = document.getElementById('users-table-body');
@@ -78,7 +87,7 @@ window.saveUser = async (uid) => {
         target_uid: uid,
         new_role: newRole,
         new_status: newStatus,
-        new_name: newName // Se envía el nombre nuevo a la BD
+        new_name: newName 
     });
 
     if (error) alert(`Error: ${error.message}`);
@@ -129,7 +138,7 @@ window.savePermissions = async (roleName) => {
 };
 
 // ==========================================
-// 3. HISTORIAL FORENSE (LOGS - AHORA CON NOMBRE)
+// 3. HISTORIAL FORENSE (LOGS)
 // ==========================================
 window.loadLogs = async () => {
     const tbody = document.getElementById('logs-table-body');

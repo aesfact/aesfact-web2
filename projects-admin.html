@@ -605,6 +605,80 @@
 
             // Cargar y mostrar proyectos
             await loadAndRenderProjects();
+
+            // --- RESTAURAR LA LÓGICA INTERACTIVA DEL FORMULARIO DE PROYECTOS ---
+            const data = await window.readData();
+            const allMembers = data && data.members ? data.members : [];
+
+            const statusEl = document.getElementById('proj-status');
+            const searchEl = document.getElementById('proj-member-search');
+            const resEl = document.getElementById('proj-member-results');
+
+            // 1. Mostrar/Ocultar cajas al cambiar de "En curso" a "Terminado/Cancelado"
+            if (statusEl) {
+                statusEl.addEventListener('change', () => {
+                    const v = statusEl.value;
+                    const feedbackSec = document.getElementById('proj-feedback-section');
+                    const partSec = document.getElementById('proj-participants-section');
+                    
+                    feedbackSec.classList.add('hidden');
+                    partSec.classList.add('hidden');
+                    
+                    if(v === 'Terminado') {
+                        feedbackSec.classList.remove('hidden');
+                        partSec.classList.remove('hidden');
+                    } else if(v === 'Cancelado') {
+                        feedbackSec.classList.remove('hidden');
+                    }
+                });
+            }
+
+            // 2. Buscador en tiempo real de Integrantes para el Proyecto
+            if (searchEl) {
+                searchEl.addEventListener('input', (e) => {
+                    const t = e.target.value.toLowerCase(); 
+                    if(t.length < 2) { resEl.style.display = 'none'; return; }
+                    
+                    const m = allMembers.filter(x => x.name.toLowerCase().includes(t));
+                    resEl.innerHTML = '';
+                    
+                    if(m.length) {
+                        resEl.style.display = 'block';
+                        m.forEach(x => {
+                            const d = document.createElement('div'); 
+                            d.style.padding = '8px'; 
+                            d.style.cursor = 'pointer'; 
+                            d.style.borderBottom = '1px solid #eee'; 
+                            d.textContent = `${x.name} (${x.role})`;
+                            
+                            d.onmouseover = () => d.style.background = '#f0f0f0'; 
+                            d.onmouseout = () => d.style.background = 'white';
+                            
+                            d.onclick = () => { 
+                                window.addParticipant({id: x.id, name: x.name, role: x.role, type: 'member'}); 
+                                searchEl.value = ''; 
+                                resEl.style.display = 'none'; 
+                            };
+                            resEl.appendChild(d);
+                        });
+                    } else {
+                        resEl.style.display = 'none';
+                    }
+                });
+            }
+
+            // 3. Añadir Participantes Externos (Voluntarios)
+            const addExtBtn = document.getElementById('proj-add-external');
+            if(addExtBtn) {
+                addExtBtn.onclick = () => {
+                    const n = document.getElementById('proj-external-name').value.trim();
+                    if(n) {
+                        window.addParticipant({id: Date.now(), name: n, role: 'Externo', type: 'external'});
+                        document.getElementById('proj-external-name').value = '';
+                    }
+                };
+            }
+            
         });
 
         async function loadAndRenderProjects() {
@@ -1053,5 +1127,5 @@
             document.getElementById('add-proj').textContent = 'Guardar Proyecto';
             document.getElementById('cancel-proj').classList.add('hidden');
         }
-        
+
     </script>
