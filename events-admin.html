@@ -91,7 +91,7 @@
                 card.className = 'card';
                 card.innerHTML = `
                     <h4>${escapeHtml(evt.title)}</h4>
-                    <p class="muted">Fecha: ${evt.date}</p>
+                    <p class="muted">Fecha: ${evt.date || 'Sin fecha asignada'}</p>
                     <p>${escapeHtml(evt.desc)}</p>
                     <button class="btn" onclick="editEvent('${evt.id}')">Editar</button>
                     <button class="btn muted" onclick="deleteEvent('${evt.id}')">Eliminar</button>
@@ -143,29 +143,54 @@
             setTimeout(() => notif.classList.add('hidden'), 3000);
         }
 
+        // --- EL CRUD CORREGIDO ---
         async function addOrUpdateEvent() {
             const title = document.getElementById('evt-title').value.trim();
-            const date = document.getElementById('evt-date').value;
+            const dateRaw = document.getElementById('evt-date').value;
             const desc = document.getElementById('evt-desc').value.trim();
 
-            if (!title || !date || !desc) { showNotification('Todos los campos son obligatorios.', 'error'); return; }
+            if (!title || !desc) { showNotification('Título y descripción son obligatorios.', 'error'); return; }
 
             const btn = document.getElementById('add-evt');
+            const originalText = btn.textContent;
             btn.disabled = true; btn.textContent = 'Guardando...';
 
             try {
+                // Preparar Payload seguro (soporta fechas vacías)
+                const payload = {
+                    title,
+                    date: dateRaw ? dateRaw : null,
+                    desc
+                };
+
                 if (window.currentEditId) {
-                    const { error } = await window.supabaseClient.from('events').update({ title, date, desc }).eq('id', window.currentEditId);
+                    // Actualizar
+                    const { error } = await window.supabaseClient.from('events').update(payload).eq('id', window.currentEditId);
                     if (error) throw error;
                     showNotification('Evento actualizado.');
                 } else {
-                    const { error } = await window.supabaseClient.from('events').insert([{ title, date, desc }]);
+                    // Insertar con el ID faltante
+                    payload.id = Date.now().toString();
+                    const { error } = await window.supabaseClient.from('events').insert([payload]);
                     if (error) throw error;
                     showNotification('Evento agregado.');
                 }
                 clearEventForm();
                 await loadAndRenderEvents();
-            } catch (e) { showNotification('Error al guardar evento.', 'error'); } 
-            finally { btn.disabled = false; btn.textContent = window.currentEditId ? 'Actualizar Evento' : 'Agregar Evento'; }
+            } catch (e) { 
+                console.error("🚨 Error BD:", e);
+                showNotification('Error al guardar evento.', 'error'); 
+            } finally { 
+                btn.disabled = false; 
+                btn.textContent = originalText;
+            }
+        }
+
+        // Utilidad para pintar sin que falle el HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
