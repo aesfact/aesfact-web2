@@ -26,9 +26,7 @@
             --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -52,445 +50,105 @@
         }
 
         .admin-header .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0;
+            display: flex; justify-content: space-between; align-items: center; padding: 0;
         }
 
         .admin-header .back-link {
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-md);
-            transition: var(--transition);
+            text-decoration: none; color: var(--text-secondary); font-weight: 500;
+            font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem; border-radius: var(--radius-md); transition: var(--transition);
         }
 
-        .admin-header .back-link:hover {
-            background: var(--bg-primary);
-            color: var(--text-primary);
-        }
-
-        .admin-header h2 {
-            margin: 0;
-            color: var(--text-primary);
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
+        .admin-header .back-link:hover { background: var(--bg-primary); color: var(--text-primary); }
+        .admin-header h2 { margin: 0; color: var(--text-primary); font-size: 1.25rem; font-weight: 600; }
 
         /* Contenedor principal */
         .projects-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
 
         /* Secciones */
         .projects-section {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border-color);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            transition: var(--transition);
+            background: var(--bg-secondary); border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md); border: 1px solid var(--border-color);
+            padding: 2rem; margin-bottom: 2rem; transition: var(--transition);
         }
-
-        .projects-section:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-1px);
-        }
-
-        .projects-section h3 {
-            margin: 0 0 1.5rem 0;
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
+        .projects-section:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
+        .projects-section h3 { margin: 0 0 1.5rem 0; color: var(--text-primary); font-size: 1.5rem; font-weight: 600; }
 
         /* Formularios */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .form-grid label, label { display: block; font-weight: 500; color: var(--text-primary); margin-bottom: 0.5rem; font-size: 0.875rem; }
+        
+        input[type="text"], input[type="date"], select, textarea {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); background: var(--bg-secondary);
+            font-size: 0.875rem; margin-bottom: 1rem; transition: var(--transition);
         }
-
-        .form-grid label {
-            display: block;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--blue-light); box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
         }
-
-        .form-grid input,
-        .form-grid select,
-        .form-grid textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            background: var(--bg-secondary);
-            font-size: 0.875rem;
-            transition: var(--transition);
-        }
-
-        .form-grid input:focus,
-        .form-grid select:focus,
-        .form-grid textarea:focus {
-            outline: none;
-            border-color: var(--blue-light);
-            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
-        }
-
-        /* Inputs individuales */
-        input[type="text"],
-        input[type="date"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            background: var(--bg-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-            transition: var(--transition);
-        }
-
-        input[type="text"]:focus,
-        input[type="date"]:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: var(--blue-light);
-            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
+        textarea { resize: vertical; min-height: 80px; }
 
         /* File upload */
-        .file-upload-wrapper {
-            position: relative;
-            margin-bottom: 1rem;
-        }
-
-        .file-upload-wrapper input {
-            opacity: 0;
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
+        .file-upload-wrapper { position: relative; margin-bottom: 1rem; }
+        .file-upload-wrapper input { opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer; z-index: 2; }
         .file-upload-wrapper::before {
-            content: '📎 Seleccionar imágenes';
-            display: block;
-            padding: 1rem;
-            border: 2px dashed var(--border-color);
-            border-radius: var(--radius-md);
-            text-align: center;
-            background: var(--bg-primary);
-            color: var(--text-secondary);
+            content: '📎 Seleccionar imágenes'; display: block; padding: 1rem;
+            border: 2px dashed var(--border-color); border-radius: var(--radius-md);
+            text-align: center; background: var(--bg-primary); color: var(--text-secondary);
             transition: var(--transition);
         }
-
-        .file-upload-wrapper:hover::before {
-            border-color: var(--blue-light);
-            background: var(--bg-secondary);
-        }
+        .file-upload-wrapper:hover::before { border-color: var(--blue-light); background: var(--bg-secondary); }
 
         /* Media preview */
-        .media-preview img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: var(--radius-md);
-            border: 2px solid var(--border-color);
-            margin: 0.5rem;
-            transition: var(--transition);
-        }
-
-        .media-preview img:hover {
-            transform: scale(1.05);
-        }
+        .media-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .media-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color); transition: var(--transition); }
+        .media-preview img:hover { transform: scale(1.05); }
 
         /* Botones */
         .btn {
-            background: linear-gradient(135deg, var(--blue-accent), var(--blue-light));
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--blue-accent), var(--blue-light)); color: white;
+            border: none; padding: 0.75rem 1.5rem; border-radius: var(--radius-md); cursor: pointer;
+            font-weight: 600; font-size: 0.875rem; transition: var(--transition); display: inline-flex;
+            align-items: center; gap: 0.5rem; justify-content: center;
         }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn.muted {
-            background: linear-gradient(135deg, #64748b, #475569);
-        }
-
-        .btn.muted:hover {
-            background: linear-gradient(135deg, #475569, #334155);
-        }
-
-        /* Acciones admin */
-        .admin-actions {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-        }
+        .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .btn.muted { background: linear-gradient(135deg, #64748b, #475569); }
+        .btn.muted:hover { background: linear-gradient(135deg, #475569, #334155); }
+        .admin-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
 
         /* Barra de búsqueda */
-        .search-bar {
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-sm);
-        }
+        .search-bar { margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
+        .search-bar input { margin-bottom: 0; }
 
-        .search-bar label {
-            display: block;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
+        /* Etapas y Tarjetas */
+        .roadmap-stage { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); }
+        .roadmap-stage h3 { margin: 0 0 1rem 0; font-size: 1.25rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
+        .stage-projects { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+        .project-card { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; box-shadow: var(--shadow-sm); transition: var(--transition); }
+        .project-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: var(--blue-light); }
+        .project-card h4 { margin: 0 0 0.5rem 0; font-size: 1.1rem; }
+        .project-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-size: 0.875rem; }
+        
+        .project-status { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .status-activo { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+        .status-terminado { background: #dbeafe; color: #1e40af; border: 1px solid #3b82f6; }
+        .status-cancelado { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+        .status-pendiente, .status-encurso { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+        
+        .project-desc { color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5; font-size: 0.875rem; }
+        .project-actions { display: flex; gap: 0.5rem; }
+        .project-actions .btn { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
 
-        .search-bar input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            background: var(--bg-secondary);
-            font-size: 0.875rem;
-            transition: var(--transition);
-        }
+        /* Notificaciones */
+        .notification { position: fixed; top: 1.5rem; right: 1.5rem; background: var(--bg-secondary); padding: 1rem 1.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); border: 1px solid var(--border-color); z-index: 1000; transition: var(--transition); max-width: 400px; font-weight: 500; animation: slideIn 0.3s ease-out; }
+        .notification::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--blue-accent); border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+        .notification.error::before { background: #ef4444; }
+        .notification.hidden { opacity: 0; transform: translateX(100%); pointer-events: none; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
 
-        .search-bar input:focus {
-            outline: none;
-            border-color: var(--blue-light);
-            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
-        }
-
-        /* Estilos mejorados para las etapas */
-        .roadmap-stage {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow-sm);
-            transition: var(--transition);
-        }
-
-        .roadmap-stage:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .roadmap-stage h3 {
-            color: var(--text-primary);
-            margin: 0 0 1rem 0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 0.5rem;
-        }
-
-        /* Grid de proyectos por etapa */
-        .stage-projects {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 1rem;
-        }
-
-        /* Tarjetas de proyecto mejoradas */
-        .project-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 1rem;
-            box-shadow: var(--shadow-sm);
-            transition: var(--transition);
-            position: relative;
-        }
-
-        .project-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
-            border-color: var(--blue-light);
-        }
-
-        .project-card h4 {
-            color: var(--text-primary);
-            margin: 0 0 0.5rem 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .project-card .project-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-            font-size: 0.875rem;
-        }
-
-        .project-status {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .status-activo {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-            color: #065f46;
-            border: 1px solid #10b981;
-        }
-
-        .status-terminado {
-            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-            color: #1e40af;
-            border: 1px solid #3b82f6;
-        }
-
-        .status-cancelado {
-            background: linear-gradient(135deg, #fee2e2, #fecaca);
-            color: #991b1b;
-            border: 1px solid #ef4444;
-        }
-
-        .status-pendiente {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            color: #92400e;
-            border: 1px solid #f59e0b;
-        }
-
-        .project-card .project-desc {
-            color: var(--text-secondary);
-            margin-bottom: 1rem;
-            line-height: 1.5;
-            font-size: 0.875rem;
-        }
-
-        .project-card .project-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .project-card .btn {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.75rem;
-            border-radius: var(--radius-sm);
-        }
-
-        /* Notificaciones mejoradas */
-        .notification {
-            position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            padding: 1rem 1.5rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-color);
-            z-index: 1000;
-            transition: var(--transition);
-            max-width: 400px;
-            backdrop-filter: blur(8px);
-            font-weight: 500;
-        }
-
-        .notification::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--blue-accent);
-            border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-        }
-
-        .notification.error::before {
-            background: #ef4444;
-        }
-
-        .notification.error {
-            border-color: #fecaca;
-        }
-
-        .notification.hidden {
-            opacity: 0;
-            transform: translateX(100%);
-            pointer-events: none;
-        }
-
-        /* Animación de entrada */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .notification {
-            animation: slideIn 0.3s ease-out;
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
-            .projects-container {
-                padding: 1rem 0.5rem;
-            }
-
-            .projects-section {
-                padding: 1.5rem;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .stage-projects {
-                grid-template-columns: 1fr;
-            }
-
-            .admin-header .projects-container {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .admin-actions {
-                flex-direction: column;
-            }
+            .form-grid, .stage-projects { grid-template-columns: 1fr; }
+            .admin-actions { flex-direction: column; }
         }
     </style>
 </head>
@@ -561,16 +219,16 @@
                     <div class="file-upload-wrapper">
                         <input id="proj-gallery-files" type="file" multiple accept="image/*">
                     </div>
-                    <div id="proj-gallery-preview" class="media-preview" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+                    <div id="proj-gallery-preview" class="media-preview"></div>
                 </div>
                 
-                <div class="admin-actions" style="margin-top:15px;">
-                    <button id="add-proj" class="btn" style="width:100%;" onclick="addOrUpdateProject()">Guardar Proyecto</button>
-                    <button id="cancel-proj" class="btn muted hidden" style="width:100;">Cancelar Edición</button>
+                <div class="admin-actions">
+                    <button id="add-proj" class="btn" style="flex:1;" onclick="addOrUpdateProject()">Guardar Proyecto</button>
+                    <button id="cancel-proj" class="btn muted hidden" style="flex:1;" onclick="clearForm()">Cancelar Edición</button>
                 </div>
             </div>
 
-            <div class="search-bar">
+            <div class="search-bar" style="margin-top: 30px;">
                 <input id="search-projects" placeholder="🔍 Buscar proyectos por título, descripción o estado..." oninput="filterProjects()">
             </div>
 
@@ -582,39 +240,34 @@
 
     <script src="js/app.js"></script>
     <script>
-        // Inicializar Supabase
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // VARIABLES GLOBALES DEL MOTOR DE PROYECTOS
+        let allProjectsData = null;
+        let tempParticipants = [];
+        let tempGallery = [];
+        window.currentEditId = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Verificar permisos
+            // Asegurar que Supabase existe
+            if (!window.supabaseClient && window.supabase) {
+                window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            }
+
+            // 1. Verificación de Permisos
             const permsRaw = sessionStorage.getItem('aesfact_permissions');
             if (!permsRaw || !JSON.parse(permsRaw).includes('proyectos')) {
                 alert('⛔ Acceso Restringido: No tienes permisos para gestionar proyectos.');
-                window.location.href = 'admin.html';
-                return;
+                window.location.href = 'admin.html'; return;
             }
 
-            // Verificar sesión de Supabase
+            // 2. Verificación de Sesión
             const { data: { session } } = await window.supabaseClient.auth.getSession();
-            console.log('🔐 Session check:', session ? 'ACTIVE' : 'EXPIRED');
-            if (!session) {
-                alert('Sesión expirada. Ve a admin.html para iniciar sesión nuevamente.');
-                window.location.href = 'admin.html';
-                return;
-            }
+            if (!session) { window.location.href = 'admin.html'; return; }
 
-            // Cargar y mostrar proyectos
+            // 3. Carga Inicial
             await loadAndRenderProjects();
 
-            // --- RESTAURAR LA LÓGICA INTERACTIVA DEL FORMULARIO DE PROYECTOS ---
-            const data = await window.readData();
-            const allMembers = data && data.members ? data.members : [];
-
+            // 4. LÓGICA DE INTERFAZ: Mostrar cajas si está Terminado o Cancelado
             const statusEl = document.getElementById('proj-status');
-            const searchEl = document.getElementById('proj-member-search');
-            const resEl = document.getElementById('proj-member-results');
-
-            // 1. Mostrar/Ocultar cajas al cambiar de "En curso" a "Terminado/Cancelado"
             if (statusEl) {
                 statusEl.addEventListener('change', () => {
                     const v = statusEl.value;
@@ -633,12 +286,17 @@
                 });
             }
 
-            // 2. Buscador en tiempo real de Integrantes para el Proyecto
+            // 5. BUSCADOR DE INTEGRANTES EN TIEMPO REAL
+            const searchEl = document.getElementById('proj-member-search');
+            const resEl = document.getElementById('proj-member-results');
+            
             if (searchEl) {
-                searchEl.addEventListener('input', (e) => {
+                searchEl.addEventListener('input', async (e) => {
                     const t = e.target.value.toLowerCase(); 
                     if(t.length < 2) { resEl.style.display = 'none'; return; }
                     
+                    const data = await window.readData();
+                    const allMembers = data && data.members ? data.members : [];
                     const m = allMembers.filter(x => x.name.toLowerCase().includes(t));
                     resEl.innerHTML = '';
                     
@@ -646,28 +304,21 @@
                         resEl.style.display = 'block';
                         m.forEach(x => {
                             const d = document.createElement('div'); 
-                            d.style.padding = '8px'; 
-                            d.style.cursor = 'pointer'; 
-                            d.style.borderBottom = '1px solid #eee'; 
+                            d.style.padding = '8px'; d.style.cursor = 'pointer'; d.style.borderBottom = '1px solid #eee'; 
                             d.textContent = `${x.name} (${x.role})`;
-                            
                             d.onmouseover = () => d.style.background = '#f0f0f0'; 
                             d.onmouseout = () => d.style.background = 'white';
-                            
                             d.onclick = () => { 
                                 window.addParticipant({id: x.id, name: x.name, role: x.role, type: 'member'}); 
-                                searchEl.value = ''; 
-                                resEl.style.display = 'none'; 
+                                searchEl.value = ''; resEl.style.display = 'none'; 
                             };
                             resEl.appendChild(d);
                         });
-                    } else {
-                        resEl.style.display = 'none';
-                    }
+                    } else { resEl.style.display = 'none'; }
                 });
             }
 
-            // 3. Añadir Participantes Externos (Voluntarios)
+            // 6. AÑADIR VOLUNTARIOS EXTERNOS
             const addExtBtn = document.getElementById('proj-add-external');
             if(addExtBtn) {
                 addExtBtn.onclick = () => {
@@ -678,336 +329,28 @@
                     }
                 };
             }
-            
+
+            // 7. PREVISUALIZACIÓN DE NUEVAS IMÁGENES AL SELECCIONAR
+            document.getElementById('proj-gallery-files').addEventListener('change', function(e) {
+                const preview = document.getElementById('proj-gallery-preview');
+                // No borramos el innerHTML aquí para no borrar las imágenes existentes que ya se están previsualizando.
+                Array.from(e.target.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'position:relative;width:80px;height:80px; opacity:0.7;';
+                        div.innerHTML = `
+                            <img src="${event.target.result}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+                            <span style="position:absolute; bottom:0; left:0; width:100%; background:var(--sys-green-main); color:white; font-size:10px; text-align:center; border-radius:0 0 8px 8px;">Nueva</span>
+                        `;
+                        preview.appendChild(div);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
         });
 
-        async function loadAndRenderProjects() {
-            console.log('🏗️ loadAndRenderProjects() called');
-            const data = await readData();
-            console.log('📊 Projects data:', data ? data.projects : 'null');
-            if (!data || !data.projects) {
-                console.warn('❌ No projects data');
-                return;
-            }
-
-            allProjectsData = data.projects; // Guardar para filtrado
-            renderProjects(data.projects);
-
-            const container = document.getElementById('proj-admin-list');
-            container.innerHTML = '';
-
-            // Agrupar por etapas
-            const etapas = {
-                'etapa_1': { name: '🔵 ETAPA 1: Proyección Académica y Tecnológica', projects: [] },
-                'etapa_2': { name: '🟢 ETAPA 2: Compromiso Ambiental', projects: [] },
-                'etapa_3': { name: '🟡 ETAPA 3: Responsabilidad Social y Humanitaria', projects: [] },
-                'etapa_4': { name: '🔴 ETAPA 4: Integración y Cierre Anual', projects: [] }
-            };
-
-            data.projects.forEach(proj => {
-                console.log('📄 Proyecto:', proj.title, 'Etapa:', proj.etapa);
-                const etapa = proj.etapa || 'etapa_1';
-                if (etapas[etapa]) {
-                    etapas[etapa].projects.push(proj);
-                }
-            });
-
-            console.log('📂 Etapas agrupadas:', etapas);
-
-            Object.keys(etapas).forEach(etapaKey => {
-                const etapa = etapas[etapaKey];
-                if (etapa.projects.length > 0) {
-                    const section = document.createElement('div');
-                    section.className = 'roadmap-stage';
-                    section.innerHTML = `<h3>${etapa.name}</h3>`;
-
-                    const projectsGrid = document.createElement('div');
-                    projectsGrid.className = 'stage-projects';
-
-                    etapa.projects.forEach(proj => {
-                        const statusClass = `status-${proj.status.toLowerCase().replace(' ', '')}`;
-                        const card = document.createElement('div');
-                        card.className = 'project-card';
-                        card.innerHTML = `
-                            <h4>${escapeHtml(proj.title)}</h4>
-                            <div class="project-meta">
-                                <span class="project-status ${statusClass}">${proj.status}</span>
-                                <small class="muted">${proj.date || 'Sin fecha'}</small>
-                            </div>
-                            <div class="project-desc">${escapeHtml(proj.desc.substring(0, 120))}${proj.desc.length > 120 ? '...' : ''}</div>
-                            <div class="project-actions">
-                                <button class="btn" onclick="editProject('${proj.id}')">Editar</button>
-                                <button class="btn muted" onclick="deleteProject('${proj.id}')">Eliminar</button>
-                            </div>
-                        `;
-                        projectsGrid.appendChild(card);
-                    });
-
-                    section.appendChild(projectsGrid);
-                    container.appendChild(section);
-                }
-            });
-        }
-
-        function renderProjects(projects) {
-            const container = document.getElementById('proj-admin-list');
-            container.innerHTML = '';
-
-            // Agrupar por etapas
-            const etapas = {
-                'etapa_1': { name: '🔵 ETAPA 1: Proyección Académica y Tecnológica', projects: [] },
-                'etapa_2': { name: '🟢 ETAPA 2: Compromiso Ambiental', projects: [] },
-                'etapa_3': { name: '🟡 ETAPA 3: Responsabilidad Social y Humanitaria', projects: [] },
-                'etapa_4': { name: '🔴 ETAPA 4: Integración y Cierre Anual', projects: [] }
-            };
-
-            projects.forEach(proj => {
-                const etapa = proj.etapa || 'etapa_1';
-                if (etapas[etapa]) {
-                    etapas[etapa].projects.push(proj);
-                }
-            });
-
-            Object.keys(etapas).forEach(etapaKey => {
-                const etapa = etapas[etapaKey];
-                if (etapa.projects.length > 0) {
-                    const section = document.createElement('div');
-                    section.className = 'roadmap-stage';
-                    section.innerHTML = `<h3>${etapa.name}</h3>`;
-
-                    const projectsGrid = document.createElement('div');
-                    projectsGrid.className = 'stage-projects';
-
-                    etapa.projects.forEach(proj => {
-                        const statusClass = `status-${proj.status.toLowerCase().replace(' ', '')}`;
-                        const card = document.createElement('div');
-                        card.className = 'project-card';
-                        card.innerHTML = `
-                            <h4>${escapeHtml(proj.title)}</h4>
-                            <div class="project-meta">
-                                <span class="project-status ${statusClass}">${proj.status}</span>
-                                <small class="muted">${proj.date || 'Sin fecha'}</small>
-                            </div>
-                            <div class="project-desc">${escapeHtml(proj.desc.substring(0, 120))}${proj.desc.length > 120 ? '...' : ''}</div>
-                            <div class="project-actions">
-                                <button class="btn" onclick="editProject('${proj.id}')">Editar</button>
-                                <button class="btn muted" onclick="deleteProject('${proj.id}')">Eliminar</button>
-                            </div>
-                        `;
-                        projectsGrid.appendChild(card);
-                    });
-
-                    section.appendChild(projectsGrid);
-                    container.appendChild(section);
-                }
-            });
-        }
-
-        function filterProjects() {
-            const searchTerm = document.getElementById('search-projects').value.toLowerCase().trim();
-            if (!allProjectsData) return;
-
-            if (!searchTerm) {
-                renderProjects(allProjectsData);
-                return;
-            }
-
-            const filteredProjects = allProjectsData.filter(proj =>
-                proj.title.toLowerCase().includes(searchTerm) ||
-                proj.desc.toLowerCase().includes(searchTerm) ||
-                proj.status.toLowerCase().includes(searchTerm) ||
-                (proj.etapa && proj.etapa.toLowerCase().includes(searchTerm))
-            );
-
-            renderProjects(filteredProjects);
-        }
-
-        async function editProject(id) {
-            const data = await readData();
-            const proj = data.projects.find(p => p.id === id);
-            if (!proj) return;
-
-            // Llenar formulario
-            document.getElementById('proj-title').value = proj.title || '';
-            document.getElementById('proj-desc').value = proj.desc || '';
-            document.getElementById('proj-date').value = proj.date || '';
-            document.getElementById('proj-status').value = proj.status || 'En curso';
-            document.getElementById('proj-etapa').value = proj.etapa || 'etapa_1';
-
-            // Mostrar participantes si hay
-            if (proj.participants) {
-                // Lógica para participantes
-            }
-
-            // Cambiar botón a actualizar
-            currentEditId = id;
-            const addBtn = document.getElementById('add-proj');
-            addBtn.textContent = 'Actualizar Proyecto';
-
-            const cancelBtn = document.getElementById('cancel-proj');
-            cancelBtn.classList.remove('hidden');
-            cancelBtn.onclick = clearForm;
-        }
-
-        async function updateProject(id) {
-            const title = document.getElementById('proj-title').value.trim();
-            const desc = document.getElementById('proj-desc').value.trim();
-            const date = document.getElementById('proj-date').value;
-            const status = document.getElementById('proj-status').value;
-            const etapa = document.getElementById('proj-etapa').value;
-
-            if (!title || !desc) {
-                showNotification('Título y descripción son obligatorios.', 'error');
-                return;
-            }
-
-            try {
-                const { error } = await window.supabaseClient
-                    .from('projects')
-                    .update({ title, desc, date, status, etapa })
-                    .eq('id', id);
-
-                if (error) throw error;
-
-                showNotification('Proyecto actualizado correctamente.');
-                clearForm();
-                document.getElementById('search-projects').value = ''; // Limpiar búsqueda
-                await loadAndRenderProjects();
-            } catch (e) {
-                console.error(e);
-                showNotification('Error al actualizar proyecto.', 'error');
-            }
-        }
-
-        async function deleteProject(id) {
-            if (!confirm('¿Estás seguro de eliminar este proyecto?')) return;
-
-            try {
-                const { error } = await window.supabaseClient
-                    .from('projects')
-                    .delete()
-                    .eq('id', id);
-
-                if (error) throw error;
-
-                showNotification('Proyecto eliminado correctamente.');
-                document.getElementById('search-projects').value = ''; // Limpiar búsqueda
-                await loadAndRenderProjects();
-            } catch (e) {
-                console.error(e);
-                showNotification('Error al eliminar proyecto.', 'error');
-            }
-        }
-
-        function showNotification(message, type = 'success') {
-            const notif = document.getElementById('notification');
-            notif.textContent = message;
-            notif.className = `notification ${type}`;
-            notif.classList.remove('hidden');
-            setTimeout(() => notif.classList.add('hidden'), 3000);
-        }
-
-        async function addOrUpdateProject() {
-            const title = document.getElementById('proj-title').value.trim();
-            const desc = document.getElementById('proj-desc').value.trim();
-            const date = document.getElementById('proj-date').value;
-            const status = document.getElementById('proj-status').value;
-            const etapa = document.getElementById('proj-etapa').value;
-
-            if (!title || !desc) {
-                showNotification('Título y descripción son obligatorios.', 'error');
-                return;
-            }
-
-            const btn = document.getElementById('add-proj');
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = 'Guardando...';
-
-            try {
-                if (currentEditId) {
-                    // Update
-                    const { error } = await window.supabaseClient
-                        .from('projects')
-                        .update({ title, desc, date, status, etapa })
-                        .eq('id', currentEditId);
-
-                    if (error) throw error;
-                    showNotification('Proyecto actualizado correctamente.');
-                } else {
-                    // Insert
-                    const { error } = await window.supabaseClient
-                        .from('projects')
-                        .insert([{ title, desc, date, status, etapa }]);
-
-                    if (error) throw error;
-                    showNotification('Proyecto agregado correctamente.');
-                }
-
-                clearForm();
-                document.getElementById('search-projects').value = ''; // Limpiar búsqueda
-                await loadAndRenderProjects();
-            } catch (e) {
-                console.error(e);
-                showNotification('Error al guardar proyecto.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
-            }
-        }
-
-        function clearForm() {
-            document.getElementById('proj-title').value = '';
-            document.getElementById('proj-desc').value = '';
-            document.getElementById('proj-date').value = '';
-            document.getElementById('proj-status').value = 'En curso';
-            document.getElementById('proj-etapa').value = 'etapa_1';
-            document.getElementById('add-proj').textContent = 'Guardar Proyecto';
-            document.getElementById('cancel-proj').classList.add('hidden');
-            currentEditId = null;
-        }
-
-        // Función para mostrar notificaciones
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.className = `notification ${type === 'error' ? 'error' : ''}`;
-            notification.classList.remove('hidden');
-
-            setTimeout(() => {
-                notification.classList.add('hidden');
-            }, 5000);
-        }
-
-        // Función para escapar HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Función para hacer scroll hacia arriba
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        // VARIABLES GLOBALES RESTAURADAS PARA PROYECTOS
-        let allProjectsData = null;
-        let tempParticipants = [];
-        let tempGallery = [];
-        window.currentEditId = null;
-
-        async function loadAndRenderProjects() {
-            const data = await window.readData();
-            if (!data || !data.projects) return;
-            allProjectsData = data.projects;
-            renderProjects(data.projects);
-        }
-
-        // --- SISTEMA DE PARTICIPANTES ---
+        // --- FUNCIONES DE PARTICIPANTES ---
         window.addParticipant = (p) => {
             if(tempParticipants.some(x => x.name === p.name)) return; 
             tempParticipants.push(p); renderParts();
@@ -1028,12 +371,39 @@
             });
         }
 
-        // (Mantén tus funciones renderProjects y filterProjects que estaban bien)
-        // ... 
+        // --- FUNCIONES DE GALERÍA DE IMÁGENES ---
+        function renderAdminGalleryPreview() {
+            const p = document.getElementById('proj-gallery-preview');
+            p.innerHTML = ''; // Limpiamos para redibujar las imágenes cargadas desde la BD
+            tempGallery.forEach((u, i) => {
+                const w = document.createElement('div'); 
+                w.style.cssText = 'position:relative;width:80px;height:80px;';
+                w.innerHTML = `
+                    <img src="${u}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+                    <button type="button" style="position:absolute;top:-5px;right:-5px;background:#ef4444;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 4px rgba(0,0,0,0.2);">✕</button>
+                `;
+                w.querySelector('button').onclick = async (e) => {
+                    e.preventDefault();
+                    if(confirm('¿Borrar esta imagen del servidor permanentemente?')) {
+                        await window.deleteFileFromStorage(tempGallery[i]);
+                        tempGallery.splice(i, 1);
+                        renderAdminGalleryPreview();
+                    }
+                };
+                p.appendChild(w);
+            });
+        }
+
+        // --- FUNCIONES CRUD PRINCIPALES ---
+        async function loadAndRenderProjects() {
+            const data = await window.readData();
+            if (!data || !data.projects) return;
+            allProjectsData = data.projects;
+            renderProjects(data.projects);
+        }
 
         async function editProject(id) {
-            const data = await window.readData();
-            const proj = data.projects.find(p => p.id === id);
+            const proj = allProjectsData.find(p => p.id === id);
             if (!proj) return;
 
             document.getElementById('proj-title').value = proj.title || '';
@@ -1042,28 +412,22 @@
             document.getElementById('proj-status').value = proj.status || 'En curso';
             document.getElementById('proj-etapa').value = proj.etapa || 'etapa_1';
             
-            // Forzar disparo del evento para mostrar las cajas ocultas si está Terminado
+            // Disparar evento change para mostrar cajas ocultas
             document.getElementById('proj-status').dispatchEvent(new Event('change'));
             document.getElementById('proj-feedback').value = proj.feedback || '';
 
+            // Cargar Participantes
             tempParticipants = proj.participants || [];
             renderParts();
+            
+            // Cargar Galería
+            tempGallery = proj.gallery || [];
+            renderAdminGalleryPreview();
             
             window.currentEditId = id;
             document.getElementById('add-proj').textContent = 'Actualizar Proyecto';
             document.getElementById('cancel-proj').classList.remove('hidden');
-            document.getElementById('cancel-proj').onclick = clearForm;
             window.scrollTo({top: 0, behavior: 'smooth'});
-        }
-
-        async function deleteProject(id) {
-            if (!confirm('¿Estás seguro de eliminar este proyecto?')) return;
-            try {
-                const { error } = await window.supabaseClient.from('projects').delete().eq('id', id);
-                if (error) throw error;
-                showNotification('Proyecto eliminado.');
-                await loadAndRenderProjects();
-            } catch (e) { showNotification('Error al eliminar.', 'error'); }
         }
 
         async function addOrUpdateProject() {
@@ -1074,41 +438,72 @@
             const etapa = document.getElementById('proj-etapa').value;
             const feedback = document.getElementById('proj-feedback').value;
 
-            if (!title || !desc) { showNotification('Título y descripción obligatorios.', 'error'); return; }
+            if (!title || !desc) { showNotification('Título y descripción son obligatorios.', 'error'); return; }
 
             const btn = document.getElementById('add-proj');
-            btn.disabled = true; btn.textContent = 'Guardando...';
+            const originalText = btn.textContent;
+            btn.disabled = true; btn.textContent = 'Subiendo archivos...';
 
             try {
-                // Subir imágenes si se seleccionaron
+                // 1. Subir archivos nuevos a Supabase Storage y guardar en tempGallery
                 const files = document.getElementById('proj-gallery-files').files;
                 if(files.length > 0){
-                    btn.textContent = 'Subiendo imágenes...';
                     for(let file of files){
                         const u = await window.uploadImageToStorage(file, 'proyectos'); 
                         if(u) tempGallery.push(u);
                     } 
                 }
 
+                // 2. Preparar el Payload
                 const payload = { 
                     title, desc, date, status, etapa, feedback, 
                     participants: tempParticipants, gallery: tempGallery 
                 };
 
+                btn.textContent = 'Guardando datos...';
+
+                // 3. Ejecutar actualización o inserción
                 if (window.currentEditId) {
                     const { error } = await window.supabaseClient.from('projects').update(payload).eq('id', window.currentEditId);
                     if (error) throw error;
-                    showNotification('Proyecto actualizado.');
+                    showNotification('Proyecto actualizado correctamente.');
                 } else {
                     const { error } = await window.supabaseClient.from('projects').insert([payload]);
                     if (error) throw error;
-                    showNotification('Proyecto creado.');
+                    showNotification('Proyecto creado correctamente.');
                 }
 
                 clearForm();
                 await loadAndRenderProjects();
-            } catch (e) { showNotification('Error al guardar.', 'error'); } 
-            finally { btn.disabled = false; btn.textContent = 'Guardar Proyecto'; }
+            } catch (e) { 
+                console.error(e);
+                showNotification('Error al guardar.', 'error'); 
+            } finally { 
+                btn.disabled = false; btn.textContent = originalText; 
+            }
+        }
+
+        async function deleteProject(id) {
+            if (!confirm('¿Estás seguro de eliminar este proyecto y todas sus imágenes?')) return;
+            try {
+                // Borrar imágenes asociadas primero
+                const proj = allProjectsData.find(p => p.id === id);
+                if(proj && proj.gallery && Array.isArray(proj.gallery)) {
+                    for(let url of proj.gallery) {
+                        await window.deleteFileFromStorage(url);
+                    }
+                }
+                // Borrar registro de la base de datos
+                const { error } = await window.supabaseClient.from('projects').delete().eq('id', id);
+                if (error) throw error;
+                
+                showNotification('Proyecto eliminado correctamente.');
+                document.getElementById('search-projects').value = ''; 
+                await loadAndRenderProjects();
+            } catch (e) { 
+                console.error(e);
+                showNotification('Error al eliminar.', 'error'); 
+            }
         }
 
         function clearForm() {
@@ -1117,6 +512,7 @@
             document.getElementById('proj-date').value = '';
             document.getElementById('proj-status').value = 'En curso';
             document.getElementById('proj-etapa').value = 'etapa_1';
+            document.getElementById('proj-status').dispatchEvent(new Event('change'));
             document.getElementById('proj-feedback').value = '';
             document.getElementById('proj-gallery-files').value = '';
             tempParticipants = [];
@@ -1128,4 +524,84 @@
             document.getElementById('cancel-proj').classList.add('hidden');
         }
 
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type === 'error' ? 'error' : ''}`;
+            notification.classList.remove('hidden');
+            setTimeout(() => notification.classList.add('hidden'), 3000);
+        }
+
+        function filterProjects() {
+            const searchTerm = document.getElementById('search-projects').value.toLowerCase().trim();
+            if (!allProjectsData) return;
+            if (!searchTerm) { renderProjects(allProjectsData); return; }
+
+            const filteredProjects = allProjectsData.filter(proj =>
+                proj.title.toLowerCase().includes(searchTerm) ||
+                proj.desc.toLowerCase().includes(searchTerm) ||
+                proj.status.toLowerCase().includes(searchTerm) ||
+                (proj.etapa && proj.etapa.toLowerCase().includes(searchTerm))
+            );
+            renderProjects(filteredProjects);
+        }
+
+        function renderProjects(projects) {
+            const container = document.getElementById('proj-admin-list');
+            container.innerHTML = '';
+
+            const etapas = {
+                'etapa_1': { name: '🔵 ETAPA 1: Proyección Académica y Tecnológica', projects: [] },
+                'etapa_2': { name: '🟢 ETAPA 2: Compromiso Ambiental', projects: [] },
+                'etapa_3': { name: '🟡 ETAPA 3: Responsabilidad Social y Humanitaria', projects: [] },
+                'etapa_4': { name: '🔴 ETAPA 4: Integración y Cierre Anual', projects: [] }
+            };
+
+            projects.forEach(proj => {
+                const etapa = proj.etapa || 'etapa_1';
+                if (etapas[etapa]) etapas[etapa].projects.push(proj);
+            });
+
+            Object.keys(etapas).forEach(etapaKey => {
+                const etapa = etapas[etapaKey];
+                if (etapa.projects.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'roadmap-stage';
+                    section.innerHTML = `<h3>${etapa.name}</h3>`;
+
+                    const projectsGrid = document.createElement('div');
+                    projectsGrid.className = 'stage-projects';
+
+                    etapa.projects.forEach(proj => {
+                        const statusClass = `status-${proj.status.toLowerCase().replace(' ', '')}`;
+                        const card = document.createElement('div');
+                        card.className = 'project-card';
+                        card.innerHTML = `
+                            <h4>${escapeHtml(proj.title)}</h4>
+                            <div class="project-meta">
+                                <span class="project-status ${statusClass}">${proj.status}</span>
+                                <small class="muted">${proj.date || 'Sin fecha'}</small>
+                            </div>
+                            <div class="project-desc">${escapeHtml(proj.desc.substring(0, 120))}${proj.desc.length > 120 ? '...' : ''}</div>
+                            <div class="project-actions">
+                                <button class="btn" onclick="editProject('${proj.id}')">Editar</button>
+                                <button class="btn muted" onclick="deleteProject('${proj.id}')">Eliminar</button>
+                            </div>
+                        `;
+                        projectsGrid.appendChild(card);
+                    });
+
+                    section.appendChild(projectsGrid);
+                    container.appendChild(section);
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     </script>
+</body>
+</html>

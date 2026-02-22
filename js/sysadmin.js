@@ -3,28 +3,24 @@
 
 const MODULOS_DISPONIBLES = ['mantenimiento', 'nosotros', 'proyectos', 'eventos', 'noticias', 'contactos', 'finanzas', 'integrantes', 'aesfact', 'panel_sysadmin'];
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Le damos a app.js 300ms para que conecte a Supabase tranquilamente
-    setTimeout(async () => {
-        if (!window.supabaseClient) {
-            console.error("Supabase no cargó a tiempo");
-            return;
-        }
+document.addEventListener('DOMContentLoaded', async () => {
+    // Forzar inicialización de Supabase si app.js aún no lo ha hecho por latencia
+    if (!window.supabaseClient && window.supabase) {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
 
-        const { data: { session } } = await window.supabaseClient.auth.getSession();
-        const localRole = sessionStorage.getItem('aesfact_role');
+    const { data: { session } } = await window.supabaseClient.auth.getSession();
+    const localRole = sessionStorage.getItem('aesfact_role');
 
-        if (!session || localRole !== 'SysAdmin') {
-            alert('⛔ ACCESO RESTRINGIDO. Esta área es exclusiva para el Administrador de Sistemas.');
-            window.location.href = 'admin.html';
-            return;
-        }
+    if (!session || localRole !== 'SysAdmin') {
+        alert('⛔ ACCESO RESTRINGIDO. Esta área es exclusiva para el Administrador de Sistemas.');
+        window.location.href = 'admin.html';
+        return;
+    }
 
-        // Si pasó los controles, cargamos el panel
-        loadUsers();
-        loadPermissions();
-        loadLogs();
-    }, 300);
+    loadUsers();
+    loadPermissions();
+    loadLogs();
 });
 
 window.switchTab = (tabId) => {
@@ -46,7 +42,6 @@ async function loadUsers() {
     tbody.innerHTML = '';
     data.forEach(u => {
         const tr = document.createElement('tr');
-        
         tr.innerHTML = `
             <td>
                 <input type="text" id="name-${u.uid}" value="${escapeHtml(u.user_name)}" class="sys-select" style="width: 200px; margin-bottom: 5px;" placeholder="Ej. Juan Pérez">
@@ -84,10 +79,7 @@ window.saveUser = async (uid) => {
     if(!confirm(`¿Guardar cambios para este usuario?`)) return;
 
     const { error } = await window.supabaseClient.rpc('update_user_access', {
-        target_uid: uid,
-        new_role: newRole,
-        new_status: newStatus,
-        new_name: newName 
+        target_uid: uid, new_role: newRole, new_status: newStatus, new_name: newName 
     });
 
     if (error) alert(`Error: ${error.message}`);
