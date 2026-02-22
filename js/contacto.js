@@ -130,19 +130,30 @@ window.renderContactAdminList = function(contactsData) {
                 </div>
             `;
 
-            // Botón: Marcar como Resuelto
+            // Botón: Marcar como Resuelto con Feedback
             const resolveBtn = mDiv.querySelector('.resolve-btn');
-            if(resolveBtn) resolveBtn.onclick = () => updateTicketStatus(msg.id, 'Resuelto');
+            if(resolveBtn) {
+                resolveBtn.onclick = (e) => {
+                    e.target.textContent = '⏳ Guardando...';
+                    updateTicketStatus(msg.id, 'Resuelto');
+                };
+            }
 
-            // Botón: Devolver a Pendiente
+            // Botón: Devolver a Pendiente con Feedback
             const pendingBtn = mDiv.querySelector('.pending-btn');
-            if(pendingBtn) pendingBtn.onclick = () => updateTicketStatus(msg.id, 'Pendiente');
+            if(pendingBtn) {
+                pendingBtn.onclick = (e) => {
+                    e.target.textContent = '⏳ Guardando...';
+                    updateTicketStatus(msg.id, 'Pendiente');
+                };
+            }
 
-            // Botón: Borrar (Archivar)
+            // Botón: Borrar (Archivar) con manejo de errores
             mDiv.querySelector('.del-msg-btn').onclick = async () => {
                 if(confirm('¿Seguro que deseas eliminar este mensaje de la bandeja permanentemente?')) {
-                    await supabase.from('contacts').delete().eq('id', msg.id);
-                    if(typeof loadAdminLists === 'function') loadAdminLists(); 
+                    const { error } = await supabase.from('contacts').delete().eq('id', msg.id);
+                    if (error) alert('🚨 Error borrando: ' + error.message);
+                    else if(typeof loadAdminLists === 'function') loadAdminLists(); 
                 }
             };
 
@@ -151,15 +162,27 @@ window.renderContactAdminList = function(contactsData) {
     }
 };
 
-// Función interna para actualizar el estado en Supabase
+// Función interna mejorada para actualizar el estado
 async function updateTicketStatus(id, newStatus) {
     try {
         const { error } = await supabase.from('contacts').update({ status: newStatus }).eq('id', id);
-        if (error) throw error;
-        if(typeof loadAdminLists === 'function') loadAdminLists();
+        
+        // Si Supabase se queja, que nos diga exactamente por qué
+        if (error) {
+            alert('🚨 Error de Supabase: ' + error.message);
+            return;
+        }
+        
+        // Forzar recarga de la lista. Si falla la función, forzamos recarga de página (Plan B infalible)
+        if(typeof loadAdminLists === 'function') {
+            loadAdminLists();
+        } else {
+            window.location.reload(); 
+        }
+        
     } catch (e) {
         console.error(e);
-        alert('Error al actualizar el estado.');
+        alert('Error en el código: ' + e.message);
     }
 }
 
