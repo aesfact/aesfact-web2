@@ -7,116 +7,184 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
     <style>
-        :root {
-            --dark-blue: #04293a;
-        }
-        body { background-color: #f4f7f6; }
+        :root { --dark-blue: #04293a; --blue-accent: #013a63; --blue-light: #0d5d9e; --bg-primary: #f8fafc; --bg-secondary: #ffffff; --text-primary: #1e293b; --text-secondary: #64748b; --border-color: #e2e8f0; --radius-md: 8px; --radius-lg: 12px; --transition: all 0.2s ease;}
+        body { background-color: var(--bg-primary); font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; color: var(--text-primary); }
         .aesfact-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .aesfact-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .aesfact-section {
-            background: white; padding: 30px; border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 30px;
-        }
-        .aesfact-section h3 { margin-top: 0; color: var(--dark-blue); }
-        .btn { background: var(--dark-blue); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn:hover { background: #0d5d9e; }
-        .file-upload-wrapper { position: relative; }
-        .file-upload-wrapper input { opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer; }
-        .file-upload-wrapper::before { content: '📎 Seleccionar imagen'; display: block; padding: 10px; border: 2px dashed #ccc; border-radius: 6px; text-align: center; background: #f9f9f9; }
+        .aesfact-section { background: white; padding: 30px; border-radius: var(--radius-lg); box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid var(--border-color); }
+        .aesfact-section h3 { margin-top: 0; color: var(--dark-blue); font-size: 1.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.85rem; color: var(--text-primary); margin-top: 15px; }
+        input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.9rem; box-sizing: border-box; margin-bottom: 5px; background: var(--bg-secondary); color: var(--text-primary); }
+        input:focus { outline: none; border-color: var(--blue-light); box-shadow: 0 0 0 3px rgba(13,93,158,0.1); }
+        .btn { background: linear-gradient(135deg, var(--blue-accent), var(--blue-light)); color: white; border: none; padding: 12px 20px; border-radius: var(--radius-md); cursor: pointer; font-weight: bold; transition: var(--transition); width: 100%; font-size: 1rem; }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .file-upload-wrapper { position: relative; margin-bottom: 15px; margin-top: 5px; }
+        .file-upload-wrapper input { opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer; z-index: 2; }
+        .file-upload-wrapper::before { content: '📸 Seleccionar imagen de portada'; display: block; padding: 15px; border: 2px dashed var(--border-color); border-radius: var(--radius-md); text-align: center; background: #f8fafc; color: var(--text-secondary); transition: var(--transition); font-weight: 500; }
+        .file-upload-wrapper:hover::before { border-color: var(--blue-light); background: white; }
+        .media-preview { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; min-height: 10px; width: 100%; }
+        .notification { position: fixed; top: 20px; right: 20px; background: white; color: var(--text-primary); padding: 15px 20px; border-radius: var(--radius-md); box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-left: 4px solid #10b981; z-index: 1000; transition: var(--transition); font-weight: 500; }
+        .notification.error { border-left-color: #ef4444; }
+        .notification.hidden { opacity: 0; transform: translateX(100%); pointer-events: none; }
     </style>
 </head>
 <body>
-    <div style="background: white; padding: 15px; border-bottom: 1px solid #eee;">
+    <div style="background: white; padding: 15px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100;">
         <div class="aesfact-container" style="padding: 0; display: flex; justify-content: space-between; align-items: center;">
-            <a href="admin.html" style="text-decoration: none; color: #555; font-weight: bold;">← Volver al Admin</a>
-            <h2 style="margin: 0; color: var(--dark-blue);">Gestión de AESFACT</h2>
+            <a href="admin.html" style="text-decoration: none; color: var(--text-secondary); font-weight: bold; display: flex; align-items: center; gap: 5px;">← Volver al Admin</a>
+            <h2 style="margin: 0; color: var(--dark-blue); font-size: 1.25rem;">Gestión de AESFACT</h2>
         </div>
     </div>
 
     <div class="aesfact-container">
         <section class="aesfact-section">
-            <h3>AESFACT Portada</h3>
-            <label>📅 Año Activo</label>
-            <input id="aesfact-year" placeholder="Año (ej: 2026)">
+            <h3>Configuración de Portada</h3>
             
-            <label>🔗 URL de Imagen principal (opcional)</label>
-            <input id="aesfact-image-url" placeholder="https://...">
+            <label>📅 Año Activo / Lema</label>
+            <input id="aesfact-year" placeholder="Ej: Generación 2026">
             
-            <label>🖼️ O sube la imagen de portada aquí:</label>
+            <label class="muted">🔗 URL de Imagen principal (opcional si subes archivo)</label>
+            <input id="aesfact-image-url" placeholder="https://ejemplo.com/imagen.jpg">
+            
+            <label class="muted">📸 O sube una imagen desde tu equipo:</label>
             <div class="file-upload-wrapper">
                 <input id="aesfact-image-file" type="file" accept="image/*">
             </div>
+
+            <div id="aesfact-image-preview" class="media-preview"></div>
             
-            <button id="save-aesfact" class="btn" style="margin-top: 10px;">Guardar Portada</button>
+            <button id="save-aesfact" class="btn" style="margin-top: 10px;" onclick="saveAesfactData()">Guardar Configuración</button>
         </section>
     </div>
 
+    <div id="notification" class="notification hidden"></div>
+
     <script src="js/app.js"></script>
     <script>
-        // 1. EVENTO PARA PREVISUALIZAR LA IMAGEN
-        document.getElementById('aesfact-image-file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const wrapper = document.querySelector('.file-upload-wrapper');
-                    wrapper.style.backgroundImage = `url(${e.target.result})`;
-                    wrapper.style.backgroundSize = 'cover';
-                    wrapper.style.backgroundPosition = 'center';
-                    wrapper.style.color = 'transparent';
+        document.addEventListener('DOMContentLoaded', async () => {
+            setTimeout(async () => {
+                const permsRaw = sessionStorage.getItem('aesfact_permissions');
+                if (!permsRaw || !JSON.parse(permsRaw).includes('aesfact')) {
+                    alert('⛔ Acceso Restringido.');
+                    window.location.href = 'admin.html'; return;
                 }
-                reader.readAsDataURL(file);
-            }
+
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) { window.location.href = 'admin.html'; return; }
+
+                await loadAesfactData();
+            }, 300);
+
+            // EVENTO DE PREVISUALIZACIÓN DE IMAGEN LOCAL
+            document.getElementById('aesfact-image-file').addEventListener('change', function(e) {
+                const preview = document.getElementById('aesfact-image-preview');
+                preview.innerHTML = ''; 
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'position:relative; width:100%; max-width:600px; height:250px;';
+                        div.innerHTML = `
+                            <img src="${event.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:12px; border:3px solid #10b981; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                            <span style="position:absolute; top:10px; right:10px; background:#10b981; color:white; font-size:12px; padding:4px 10px; border-radius:20px; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">NUEVA IMAGEN</span>
+                        `;
+                        preview.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
         });
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (!window.supabaseClient) window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-            const permsRaw = sessionStorage.getItem('aesfact_permissions');
-            if (!permsRaw || !JSON.parse(permsRaw).includes('aesfact')) {
-                window.location.href = 'admin.html'; return;
-            }
-
+        async function loadAesfactData() {
             const data = await window.readData();
             if (data && data.aesfact) {
                 document.getElementById('aesfact-year').value = data.aesfact.year || '';
                 document.getElementById('aesfact-image-url').value = data.aesfact.image || '';
+                
+                // Dibujar imagen existente si hay
+                const preview = document.getElementById('aesfact-image-preview');
+                preview.innerHTML = '';
                 if(data.aesfact.image) {
-                    const wrapper = document.querySelector('.file-upload-wrapper');
-                    wrapper.style.backgroundImage = `url(${data.aesfact.image})`;
-                    wrapper.style.backgroundSize = 'cover';
-                    wrapper.style.backgroundPosition = 'center';
-                    wrapper.style.color = 'transparent';
+                    const div = document.createElement('div');
+                    div.style.cssText = 'position:relative; width:100%; max-width:600px; height:250px;';
+                    div.innerHTML = `
+                        <img src="${data.aesfact.image}" style="width:100%; height:100%; object-fit:cover; border-radius:12px; border:1px solid var(--border-color); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <span style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.6); color:white; font-size:11px; padding:4px 10px; border-radius:20px; backdrop-filter: blur(4px);">Imagen Actual</span>
+                        <button type="button" onclick="removeAesfactImage()" style="position:absolute; top:-10px; right:-10px; background:#ef4444; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">✕</button>
+                    `;
+                    preview.appendChild(div);
                 }
             }
-        });
+        }
 
-        // 2. FUNCIÓN DE GUARDADO RESTAURADA
-        document.getElementById('save-aesfact').addEventListener('click', async () => {
+        window.removeAesfactImage = async function() {
+            if(confirm('¿Seguro que deseas eliminar la imagen de portada actual del servidor?')) {
+                const imageUrl = document.getElementById('aesfact-image-url').value;
+                if(imageUrl) {
+                    await window.deleteFileFromStorage(imageUrl);
+                    document.getElementById('aesfact-image-url').value = ''; 
+                    
+                    // Actualizar BD para quitar la imagen
+                    await window.supabaseClient.from('aesfact').upsert({ 
+                        id: 'aesfact', 
+                        year: document.getElementById('aesfact-year').value, 
+                        image: '' 
+                    });
+                }
+                document.getElementById('aesfact-image-preview').innerHTML = '';
+                showNotification('Imagen de portada eliminada.');
+            }
+        };
+
+        async function saveAesfactData() {
             const btn = document.getElementById('save-aesfact');
-            btn.disabled = true; btn.textContent = 'Guardando...';
+            const originalText = btn.textContent;
+            btn.disabled = true; 
+            btn.textContent = 'Procesando...';
             
             try {
-                const year = document.getElementById('aesfact-year').value; 
-                let imageUrl = document.getElementById('aesfact-image-url').value;
+                const year = document.getElementById('aesfact-year').value.trim(); 
+                let imageUrl = document.getElementById('aesfact-image-url').value.trim();
                 const fileInput = document.getElementById('aesfact-image-file'); 
 
                 if (fileInput.files.length > 0) {
-                    btn.textContent = 'Subiendo imagen...';
+                    btn.textContent = 'Subiendo imagen al servidor...';
                     const uploadedUrl = await window.uploadImageToStorage(fileInput.files[0], 'aesfact');
                     if (uploadedUrl) imageUrl = uploadedUrl;
                 }
 
                 btn.textContent = 'Actualizando base de datos...';
-                const { error } = await window.supabaseClient.from('aesfact').upsert({ id: 'aesfact', year: year, image: imageUrl });
+                const { error } = await window.supabaseClient.from('aesfact').upsert({ 
+                    id: 'aesfact', 
+                    year: year, 
+                    image: imageUrl 
+                });
+                
                 if(error) throw error;
                 
-                alert('✅ Portada guardada con éxito.');
+                showNotification('Portada y configuración guardada con éxito.');
+                
+                // Recargar para mostrar la nueva imagen oficial
+                setTimeout(() => { loadAesfactData(); }, 1000);
+
             } catch (e) {
-                console.error(e);
-                alert('❌ Error al guardar portada.');
+                console.error("🚨 Error BD AESFACT:", e);
+                showNotification('Error al guardar la portada.', 'error');
             } finally {
-                btn.disabled = false; btn.textContent = 'Guardar Portada';
+                btn.disabled = false; 
+                btn.textContent = originalText;
+                document.getElementById('aesfact-image-file').value = ''; // Limpiar input file
             }
-        });
+        }
+
+        function showNotification(message, type = 'success') {
+            const notif = document.getElementById('notification');
+            if(!notif) return;
+            notif.textContent = message;
+            notif.className = `notification ${type === 'error' ? 'error' : ''}`;
+            notif.classList.remove('hidden');
+            setTimeout(() => notif.classList.add('hidden'), 3000);
+        }
     </script>
+</body>
+</html>
