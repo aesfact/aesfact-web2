@@ -1,64 +1,60 @@
-// js/finanzas.js - VERSIÓN DEFINITIVA (A PRUEBA DE FALLOS)
+// js/finanzas.js - VERSIÓN DEFINITIVA (ARRANQUE BLINDADO)
 // =========================================================
 
-// Credenciales de respaldo por si el archivo app.js se retrasa
-const SUP_URL = 'https://vjdwzfvvbybwwymtqoym.supabase.co';
-const SUP_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHd6ZnZ2Ynlid3d5bXRxb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzU4NDgsImV4cCI6MjA4NzA1MTg0OH0.mjdhTGIBv4BpMbYKMdeTzmssekDxjKsTmFkkas692C4';
+// Credenciales de respaldo infalibles
+const SUP_URL_BACKUP = 'https://vjdwzfvvbybwwymtqoym.supabase.co';
+const SUP_KEY_BACKUP = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZHd6ZnZ2Ynlid3d5bXRxb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NzU4NDgsImV4cCI6MjA4NzA1MTg0OH0.mjdhTGIBv4BpMbYKMdeTzmssekDxjKsTmFkkas692C4';
 
 let allTransactions = [];
 let financeChart = null;
 let currentEditId = null;
 
-// --- INICIALIZACIÓN BLINDADA ---
-document.addEventListener('DOMContentLoaded', async () => {
+// --- 1. MOTOR DE ARRANQUE DIRECTO ---
+async function iniciarModuloFinanzas() {
     console.log("🚀 Arrancando el motor de Finanzas...");
 
-    // 1. Forzar conexión inmediata (Adiós a los tiempos de espera que fallaban)
+    // Conexión inmediata
     if (!window.supabaseClient) {
-        if (window.supabase) {
-            window.supabaseClient = window.supabase.createClient(SUP_URL, SUP_KEY);
-            console.log("✅ Conexión de emergencia a Supabase establecida.");
-        } else {
-            alert("🚨 Error Crítico: No se detecta la librería de Supabase en la página.");
-            return;
-        }
+        window.supabaseClient = window.supabase.createClient(SUP_URL_BACKUP, SUP_KEY_BACKUP);
     }
 
     try {
-        // 2. Verificar Sesión Activa
+        // Verificar Sesión
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         if (!session) { 
-            console.warn("🔐 Sesión expirada.");
-            window.location.href = 'admin.html';
-            return;
+            window.location.href = 'admin.html'; return;
         }
 
-        // 3. Verificar Permisos
+        // Verificar Permisos
         const permsRaw = sessionStorage.getItem('aesfact_permissions');
         if (!permsRaw || !JSON.parse(permsRaw).includes('finanzas')) {
             alert('⛔ Acceso Restringido: Tu rol no tiene permisos de Tesorería.');
-            window.location.href = 'admin.html';
-            return;
+            window.location.href = 'admin.html'; return;
         }
 
-        console.log("✅ Acceso autorizado. Cargando historial...");
-
-        // 4. Cargar la bóveda de datos
+        // Cargar Datos
         await cargarProyectos();
         await cargarFinanzas();
 
-        // 5. Configurar fechas por defecto en los formularios
+        // Configurar Fechas por defecto
         const hoy = new Date();
-        document.getElementById('f-date').valueAsDate = hoy;
-        document.getElementById('rep-end').valueAsDate = hoy;
-        document.getElementById('rep-start').valueAsDate = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+        if(document.getElementById('f-date')) document.getElementById('f-date').valueAsDate = hoy;
+        if(document.getElementById('rep-end')) document.getElementById('rep-end').valueAsDate = hoy;
+        if(document.getElementById('rep-start')) document.getElementById('rep-start').valueAsDate = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
 
     } catch (error) {
-        console.error("🚨 Hubo un problema al arrancar Finanzas:", error);
+        console.error("🚨 Error al arrancar Finanzas:", error);
     }
-});
+}
 
-// --- CARGA DE DATOS DESDE LA BÓVEDA ---
+// 🔥 DISPARADOR A PRUEBA DE BALAS: Si la página ya cargó, arranca ya. Si no, espera.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciarModuloFinanzas);
+} else {
+    iniciarModuloFinanzas();
+}
+
+// --- 2. CARGA DE DATOS ---
 async function cargarProyectos() {
     try {
         const { data, error } = await window.supabaseClient.from('projects').select('title');
@@ -93,7 +89,7 @@ async function cargarFinanzas() {
     }
 }
 
-// --- PINTADO EN PANTALLA (GRÁFICOS Y LISTAS) ---
+// --- 3. PINTADO EN PANTALLA ---
 function renderizarTodo(datos) {
     actualizarTotales(datos);
     renderizarListas(datos);
@@ -123,8 +119,8 @@ function renderizarListas(datos) {
     incList.innerHTML = ''; expList.innerHTML = '';
 
     if (datos.length === 0) {
-        incList.innerHTML = '<p style="color:#777;">No hay ingresos.</p>';
-        expList.innerHTML = '<p style="color:#777;">No hay gastos.</p>';
+        incList.innerHTML = '<p style="color:#777; padding: 10px;">No hay ingresos registrados.</p>';
+        expList.innerHTML = '<p style="color:#777; padding: 10px;">No hay gastos registrados.</p>';
         return;
     }
 
@@ -186,7 +182,7 @@ function actualizarGrafico(datos) {
     });
 }
 
-// --- CRUD DEL MODAL DE MOVIMIENTOS ---
+// --- 4. CRUD DEL MODAL DE MOVIMIENTOS ---
 window.abrirModal = () => {
     resetModal(); 
     document.getElementById('finance-modal').classList.remove('hidden');
@@ -255,11 +251,9 @@ window.guardarMovimiento = async () => {
 
     try {
         if (currentEditId) {
-            // Actualizar existente
             const { error } = await window.supabaseClient.from('finances').update(payload).eq('id', currentEditId);
             if (error) throw error;
         } else {
-            // Crear nuevo (¡Con ID inyectado para evitar el error 400!)
             payload.id = Date.now().toString(); 
             const { error } = await window.supabaseClient.from('finances').insert([payload]);
             if (error) throw error;
@@ -284,7 +278,7 @@ window.borrarMovimiento = async (id) => {
     } catch (e) { alert('Error al borrar.'); }
 };
 
-// --- FILTROS VISUALES ---
+// --- 5. FILTROS Y REPORTES ---
 window.filtrarFinanzas = (periodo) => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
@@ -301,7 +295,6 @@ window.filtrarFinanzas = (periodo) => {
     renderizarTodo(filtrados);
 };
 
-// --- MOTOR DE GENERACIÓN DE REPORTES PDF ---
 window.generarReportePDF = () => {
     const fechaStart = document.getElementById('rep-start').value;
     const fechaEnd = document.getElementById('rep-end').value;
@@ -322,7 +315,6 @@ window.generarReportePDF = () => {
 
     if(datosFiltrados.length === 0) { alert("No hay movimientos registrados en este rango."); return; }
 
-    // Orden cronológico para el reporte (del más viejo al más nuevo)
     datosFiltrados.sort((a, b) => new Date(a.date) - new Date(b.date));
 
     let totalIng = 0; let totalEgr = 0;
@@ -341,7 +333,6 @@ window.generarReportePDF = () => {
         const { jsPDF } = window.jspdf; 
         const doc = new jsPDF();
 
-        // Diseño del PDF Corporativo
         doc.setFillColor(4, 41, 58); doc.rect(0, 0, 210, 40, 'F');
         doc.setTextColor(255, 255, 255); doc.setFontSize(22); doc.text("AESFACT", 14, 20);
         doc.setFontSize(12); doc.text("Reporte Financiero Oficial", 14, 30); doc.text(`Generado: ${new Date().toLocaleDateString()}`, 150, 30);
@@ -350,7 +341,6 @@ window.generarReportePDF = () => {
         doc.text(`Periodo evaluado: ${fechaStart} hasta ${fechaEnd}`, 14, 50); 
         doc.text(`Filtro aplicado: ${tipo.toUpperCase()}`, 14, 56);
 
-        // Tabla Dinámica
         doc.autoTable({
             startY: 65, 
             head: [['Fecha', 'Tipo', 'Concepto', 'Proyecto', 'Monto']], 
@@ -360,21 +350,18 @@ window.generarReportePDF = () => {
             alternateRowStyles: { fillColor: [240, 240, 240] }
         });
 
-        // Totales de cierre
         const finalY = doc.lastAutoTable.finalY + 10;
         doc.setFontSize(11); doc.setTextColor(50, 50, 50); doc.text("Resumen del Periodo:", 14, finalY);
         doc.setFontSize(12); doc.setTextColor(39, 174, 96); doc.text(`Total Ingresos: $${totalIng.toFixed(2)}`, 14, finalY + 7);
         doc.setTextColor(192, 57, 43); doc.text(`Total Gastos:   $${totalEgr.toFixed(2)}`, 14, finalY + 14);
         doc.setFontSize(14); doc.setTextColor(0, 0, 0); doc.text(`Balance Neto:   $${balancePeriodo.toFixed(2)}`, 14, finalY + 24);
         
-        // Firma / Pie de página
         doc.setFontSize(8); doc.setTextColor(150, 150, 150); doc.text("Documento generado por el sistema administrativo central de AESFACT.", 14, 280);
         
-        // Ejecutar Descarga
         doc.save(`Reporte_AESFACT_${fechaStart}_al_${fechaEnd}.pdf`);
     } catch(e) {
         console.error("Error PDF:", e);
-        alert("Ocurrió un error al generar el PDF. Verifica tu conexión a internet (se requiere para las librerías).");
+        alert("Ocurrió un error al generar el PDF. Verifica tu conexión a internet.");
     }
 };
 
