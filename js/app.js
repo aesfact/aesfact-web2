@@ -451,12 +451,46 @@ window.moveSlide = (sid, dir) => {
     let n = c+dir; if(n<0)n=t-1; if(n>=t)n=0;
     s[n].classList.add('active'); const cnt=document.getElementById(`${sid}-c`); if(cnt)cnt.textContent=n+1;
 };
-function escapeHtml(t) { return t ? t.toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])) : ''; }
+function escapeHtml(t) { 
+    return t ? t.toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])) : ''; }
 function bindSidebar() { const b=document.getElementById('sidebar-toggle'),s=document.getElementById('sidebar'),o=document.getElementById('sidebar-overlay'); if(b)b.onclick=()=>{s.classList.add('open');o.classList.add('open');}; if(o)o.onclick=()=>{s.classList.remove('open');o.classList.remove('open');}; }
 function renderNav() { const n=document.getElementById('sidebar-nav'); if(!n)return; const l=[{t:'Inicio',h:'index.html'}, {t:'Nosotros',h:'about.html'}, {t:'Proyectos',h:'projects.html'}, {t:'Eventos',h:'events.html'}, {t:'Noticias',h:'news.html'}, {t:'Transparencia', h:'transparencia.html'}, {t:'Galería',h:'gallery.html'}, {t:'Integrantes',h:'members.html'}, {t:'Contacto',h:'contact.html'}]; n.innerHTML=''; l.forEach(i=>{const a=document.createElement('a');a.href=i.h;a.textContent=i.t;if(location.pathname.includes(i.h))a.classList.add('active');n.appendChild(a)}); }
 function bindNewsModal(){document.getElementById('news-modal')?.addEventListener('click',e=>{if(e.target===document.getElementById('news-modal'))document.getElementById('news-modal').classList.add('hidden')})}
 function openNewsModal(t,d,b,i){ const m=document.getElementById('news-modal'),mb=document.getElementById('news-modal-body');if(!m||!mb)return; mb.innerHTML=`<div style="display:flex;flex-direction:column;gap:16px;">${i?`<img src="${i}" style="width:100%;height:300px;object-fit:cover;border-radius:12px;">`:''}<div><h2 style="color:#013a63;margin:0 0 8px 0;">${escapeHtml(t)}</h2><small style="color:#ff6b6b;font-weight:600;">${d}</small></div><div style="color:#013a63;line-height:1.8;">${escapeHtml(b).replace(/\n/g,'<br>')}</div></div>`; m.classList.remove('hidden'); }
 function closeNewsModal(){document.getElementById('news-modal')?.classList.add('hidden')}
-function initCarousel(n){ const c=document.getElementById('news-carousel');if(!c)return; if(!n.length){c.innerHTML='<div class="card"><p class="muted">Sin noticias.</p></div>';return} c.innerHTML=''; const ct=document.createElement('div'); ct.className='carousel-slides'; n.forEach((x,i)=>{ const s=document.createElement('div'); s.className=`carousel-slide ${i===0?'active':''}`; s.style.backgroundImage=x.image?`url('${x.image}')`:'linear-gradient(135deg,#04293a,#0d5d9e)'; s.innerHTML=`<div class="carousel-caption"><div class="content"><h3>${escapeHtml(x.title)}</h3><small>${x.date}</small></div></div>`; ct.appendChild(s); }); c.appendChild(ct); let idx=0; setInterval(()=>{ct.children[idx].classList.remove('active');idx=(idx+1)%ct.children.length;ct.children[idx].classList.add('active')},5000); }
+function initCarousel(n) { 
+    const c = document.getElementById('news-carousel');
+    if (!c) return; 
+    
+    if (!n.length) {
+        c.innerHTML = '<div class="card"><p class="muted">Sin noticias.</p></div>';
+        return;
+    } 
+    
+    c.innerHTML = ''; 
+    const ct = document.createElement('div'); 
+    ct.className = 'carousel-slides'; 
+    
+    n.forEach((x, i) => { 
+        const s = document.createElement('div'); 
+        s.className = `carousel-slide ${i === 0 ? 'active' : ''}`; 
+        s.style.backgroundImage = x.image ? `url('${x.image}')` : 'linear-gradient(135deg,#04293a,#0d5d9e)'; 
+        
+        // --- LA MAGIA DEL CLIC ---
+        s.style.cursor = 'pointer'; // Cambia el mouse a una "manito"
+        s.onclick = () => window.location.href = 'news.html'; // Redirección
+        
+        s.innerHTML = `<div class="carousel-caption"><div class="content"><h3>${escapeHtml(x.title)}</h3><small>${x.date}</small></div></div>`; 
+        ct.appendChild(s); 
+    }); 
+    
+    c.appendChild(ct); 
+    let idx = 0; 
+    setInterval(() => {
+        ct.children[idx].classList.remove('active');
+        idx = (idx + 1) % ct.children.length;
+        ct.children[idx].classList.add('active');
+    }, 5000); 
+}
 function openPhotoViewer(s){const p=document.getElementById('photo-viewer'),i=document.getElementById('photo-viewer-img');if(p&&i){i.src=s;p.classList.add('open')}}
 function renderMembersByRole(m){ const c=document.getElementById('members-list');if(!c)return; c.innerHTML=''; const q=[{title:'Presidente y Vicepresidenta',roles:['Presidente','Presidenta','Vicepresidente','Vicepresidenta','Vicepresedenta']},{title:'Logística',roles:['Logistica','Logística']},{title:'Publirelacionista',roles:['Publirelacionista','Relaciones Públicas','Relaciones Publicas']},{title:'Tesorería',roles:['Tesorero','Tesorería','Tesorera']},{title:'Secretaria',roles:['Secretaria','Secretario']},{title:'Vocales',roles:['Vocal','Vocales']},{title:'Colaboradores',roles:['Colaborador','Colaboradores']}]; const cr=(x)=>{ const d=document.createElement('div'); d.className='member-card'; const i=x.photo||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Crect width='220' height='220' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E"; d.innerHTML=`<img src="${i}" onclick="openPhotoViewer('${i}')"><div><h4>${escapeHtml(x.name)}</h4><p class="muted">${escapeHtml(x.role)}</p><p>${escapeHtml(x.email)}</p></div>`; return d; }; const norm=r=>(r||'').trim().toLowerCase(); const u=new Set(); q.forEach(g=>{ const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>${g.title}</h3>`; const d=document.createElement('div'); d.className='quadrant-grid'; const mat=m.filter(x=>g.roles.map(norm).includes(norm(x.role))); mat.forEach(x=>{d.appendChild(cr(x));u.add(x.id)}); if(mat.length){s.appendChild(d); c.appendChild(s);} }); const oth=m.filter(x=>!u.has(x.id)); if(oth.length){ const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>Otros</h3>`; const d=document.createElement('div'); d.className='quadrant-grid'; oth.forEach(x=>d.appendChild(cr(x))); s.appendChild(d); c.appendChild(s); } }
