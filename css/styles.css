@@ -841,3 +841,93 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue-lig
         grid-template-columns: 1fr;
     }
 }
+
+/* Estilos Modelo E4 Estratégico */
+.e4-strategy-section {
+    position: relative;
+    border-top: 4px solid #0d5d9e; /* Color institucional Educación */
+}
+
+.e4-badge {
+    display: inline-block;
+    padding: 5px 15px;
+    background: rgba(13, 93, 158, 0.1);
+    color: #0d5d9e;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
+
+.e4-flow-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 40px;
+    position: relative;
+}
+
+.e4-step {
+    padding: 20px;
+    border-radius: 15px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.e4-step.reveal {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.e4-step:hover {
+    background: white;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border-color: #0d5d9e;
+}
+
+.e4-number {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    font-size: 3rem;
+    font-weight: 900;
+    color: rgba(0,0,0,0.03);
+    user-select: none;
+}
+
+.e4-icon {
+    width: 45px;
+    height: 45px;
+    color: #0d5d9e;
+    margin-bottom: 15px;
+}
+
+.e4-step h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: #1a202c;
+}
+
+.e4-step p {
+    font-size: 0.9rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.e4-footer-info {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px dashed #cbd5e1;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+@media (max-width: 768px) {
+    .e4-flow-container { grid-template-columns: 1fr; }
+}
