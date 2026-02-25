@@ -65,49 +65,33 @@
 
     <script src="js/app.js"></script>
     <script>
-        // Inicializar Supabase
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         document.addEventListener('DOMContentLoaded', async () => {
-            // Verificar permisos
+            if (!window.supabaseClient) window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
             const permsRaw = sessionStorage.getItem('aesfact_permissions');
             if (!permsRaw || !JSON.parse(permsRaw).includes('eventos')) {
-                alert('⛔ Acceso Restringido: No tienes permisos para gestionar eventos.');
-                window.location.href = 'admin.html';
-                return;
+                alert('⛔ Acceso Restringido.');
+                window.location.href = 'admin.html'; return;
             }
 
-            // Verificar sesión de Supabase
             const { data: { session } } = await window.supabaseClient.auth.getSession();
-            console.log('🔐 Session check:', session ? 'ACTIVE' : 'EXPIRED');
-            if (!session) {
-                alert('Sesión expirada. Ve a admin.html para iniciar sesión nuevamente.');
-                window.location.href = 'admin.html';
-                return;
-            }
+            if (!session) { window.location.href = 'admin.html'; return; }
 
-            // Cargar y mostrar eventos
             await loadAndRenderEvents();
         });
 
         async function loadAndRenderEvents() {
-            console.log('📅 loadAndRenderEvents() called');
-            const data = await readData();
-            console.log('📊 Events data:', data ? data.events : 'null');
-            if (!data || !data.events) {
-                console.warn('❌ No events data');
-                return;
-            }
+            const data = await window.readData();
+            if (!data || !data.events) return;
 
             const listContainer = document.getElementById('event-admin-list');
             listContainer.innerHTML = '';
-
             data.events.forEach(evt => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
                     <h4>${escapeHtml(evt.title)}</h4>
-                    <p class="muted">Fecha: ${evt.date}</p>
+                    <p class="muted">Fecha: ${evt.date || 'Sin fecha asignada'}</p>
                     <p>${escapeHtml(evt.desc)}</p>
                     <button class="btn" onclick="editEvent('${evt.id}')">Editar</button>
                     <button class="btn muted" onclick="deleteEvent('${evt.id}')">Eliminar</button>
@@ -117,67 +101,29 @@
         }
 
         async function editEvent(id) {
-            const data = await readData();
+            const data = await window.readData();
             const evt = data.events.find(e => e.id === id);
             if (!evt) return;
 
             document.getElementById('evt-title').value = evt.title || '';
             document.getElementById('evt-date').value = evt.date || '';
             document.getElementById('evt-desc').value = evt.desc || '';
-
-            currentEditId = id;
-            const addBtn = document.getElementById('add-evt');
-            addBtn.textContent = 'Actualizar Evento';
-
-            const cancelBtn = document.getElementById('cancel-evt');
-            cancelBtn.classList.remove('hidden');
-            cancelBtn.onclick = clearEventForm;
-        }
-
-        async function updateEvent(id) {
-            const title = document.getElementById('evt-title').value.trim();
-            const date = document.getElementById('evt-date').value;
-            const desc = document.getElementById('evt-desc').value.trim();
-
-            if (!title || !date || !desc) {
-                showNotification('Todos los campos son obligatorios.', 'error');
-                return;
-            }
-
-            try {
-                const { error } = await supabase
-                    .from('events')
-                    .update({ title, date, desc })
-                    .eq('id', id);
-
-                if (error) throw error;
-
-                showNotification('Evento actualizado correctamente.');
-                clearEventForm();
-                await loadAndRenderEvents();
-            } catch (e) {
-                console.error(e);
-                showNotification('Error al actualizar evento.', 'error');
-            }
+            
+            window.currentEditId = id;
+            document.getElementById('add-evt').textContent = 'Actualizar Evento';
+            document.getElementById('cancel-evt').classList.remove('hidden');
+            document.getElementById('cancel-evt').onclick = clearEventForm;
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         async function deleteEvent(id) {
             if (!confirm('¿Estás seguro de eliminar este evento?')) return;
-
             try {
-                const { error } = await supabase
-                    .from('events')
-                    .delete()
-                    .eq('id', id);
-
+                const { error } = await window.supabaseClient.from('events').delete().eq('id', id);
                 if (error) throw error;
-
                 showNotification('Evento eliminado correctamente.');
                 await loadAndRenderEvents();
-            } catch (e) {
-                console.error(e);
-                showNotification('Error al eliminar evento.', 'error');
-            }
+            } catch (e) { showNotification('Error al eliminar evento.', 'error'); }
         }
 
         function clearEventForm() {
@@ -186,7 +132,7 @@
             document.getElementById('evt-desc').value = '';
             document.getElementById('add-evt').textContent = 'Agregar Evento';
             document.getElementById('cancel-evt').classList.add('hidden');
-            currentEditId = null;
+            window.currentEditId = null;
         }
 
         function showNotification(message, type = 'success') {
@@ -197,49 +143,59 @@
             setTimeout(() => notif.classList.add('hidden'), 3000);
         }
 
+        // --- EL CRUD CORREGIDO ---
+        // --- EL CRUD CORREGIDO DEFINITIVO ---
+        // --- EL CRUD DEFINITIVO (PULIDO Y SIN ALERTAS TÉCNICAS) ---
         async function addOrUpdateEvent() {
             const title = document.getElementById('evt-title').value.trim();
-            const date = document.getElementById('evt-date').value;
+            const dateRaw = document.getElementById('evt-date').value;
             const desc = document.getElementById('evt-desc').value.trim();
 
-            if (!title || !date || !desc) {
-                showNotification('Todos los campos son obligatorios.', 'error');
-                return;
+            if (!title || !desc) { 
+                showNotification('Título y descripción son obligatorios.', 'error'); 
+                return; 
             }
 
             const btn = document.getElementById('add-evt');
             const originalText = btn.textContent;
-            btn.disabled = true;
+            btn.disabled = true; 
             btn.textContent = 'Guardando...';
 
             try {
-                if (currentEditId) {
-                    // Update
-                    const { error } = await supabase
-                        .from('events')
-                        .update({ title, date, desc })
-                        .eq('id', currentEditId);
+                const payload = {
+                    title: title,
+                    desc: desc,
+                    date: dateRaw || '' 
+                };
 
+                if (window.currentEditId) {
+                    const { error } = await window.supabaseClient.from('events').update(payload).eq('id', window.currentEditId);
                     if (error) throw error;
                     showNotification('Evento actualizado correctamente.');
                 } else {
-                    // Insert
-                    const { error } = await supabase
-                        .from('events')
-                        .insert([{ title, date, desc }]);
-
+                    payload.id = Date.now().toString();
+                    const { error } = await window.supabaseClient.from('events').insert([payload]);
                     if (error) throw error;
                     showNotification('Evento agregado correctamente.');
                 }
-
                 clearEventForm();
                 await loadAndRenderEvents();
-            } catch (e) {
-                console.error(e);
-                showNotification('Error al guardar evento.', 'error');
-            } finally {
-                btn.disabled = false;
+            } catch (e) { 
+                // El error técnico se queda en la consola en secreto para los desarrolladores
+                console.error("🚨 Error BD:", e);
+                // El administrador solo ve un mensaje amigable
+                showNotification('Error al guardar el evento. Verifica los datos.', 'error'); 
+            } finally { 
+                btn.disabled = false; 
                 btn.textContent = originalText;
             }
+        }
+
+        // Utilidad para pintar sin que falle el HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>

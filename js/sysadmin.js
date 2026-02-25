@@ -4,6 +4,11 @@
 const MODULOS_DISPONIBLES = ['mantenimiento', 'nosotros', 'proyectos', 'eventos', 'noticias', 'contactos', 'finanzas', 'integrantes', 'aesfact', 'panel_sysadmin'];
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Forzar inicialización de Supabase si app.js aún no lo ha hecho por latencia
+    if (!window.supabaseClient && window.supabase) {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
     const { data: { session } } = await window.supabaseClient.auth.getSession();
     const localRole = sessionStorage.getItem('aesfact_role');
 
@@ -26,7 +31,7 @@ window.switchTab = (tabId) => {
 };
 
 // ==========================================
-// 1. GESTIÓN DE USUARIOS (AHORA CON NOMBRE)
+// 1. GESTIÓN DE USUARIOS
 // ==========================================
 async function loadUsers() {
     const tbody = document.getElementById('users-table-body');
@@ -37,7 +42,6 @@ async function loadUsers() {
     tbody.innerHTML = '';
     data.forEach(u => {
         const tr = document.createElement('tr');
-        
         tr.innerHTML = `
             <td>
                 <input type="text" id="name-${u.uid}" value="${escapeHtml(u.user_name)}" class="sys-select" style="width: 200px; margin-bottom: 5px;" placeholder="Ej. Juan Pérez">
@@ -75,10 +79,7 @@ window.saveUser = async (uid) => {
     if(!confirm(`¿Guardar cambios para este usuario?`)) return;
 
     const { error } = await window.supabaseClient.rpc('update_user_access', {
-        target_uid: uid,
-        new_role: newRole,
-        new_status: newStatus,
-        new_name: newName // Se envía el nombre nuevo a la BD
+        target_uid: uid, new_role: newRole, new_status: newStatus, new_name: newName 
     });
 
     if (error) alert(`Error: ${error.message}`);
@@ -129,16 +130,16 @@ window.savePermissions = async (roleName) => {
 };
 
 // ==========================================
-// 3. HISTORIAL FORENSE (LOGS - AHORA CON NOMBRE)
+// 3. HISTORIAL FORENSE (LOGS CON JSON DETAILS)
 // ==========================================
 window.loadLogs = async () => {
     const tbody = document.getElementById('logs-table-body');
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Cargando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Cargando...</td></tr>';
 
     const { data, error } = await window.supabaseClient.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(100); 
 
-    if (error) { tbody.innerHTML = `<tr><td colspan="6" style="color:red;">Error: ${error.message}</td></tr>`; return; }
-    if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No hay actividad registrada aún.</td></tr>'; return; }
+    if (error) { tbody.innerHTML = `<tr><td colspan="7" style="color:red;">Error: ${error.message}</td></tr>`; return; }
+    if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No hay actividad registrada aún.</td></tr>'; return; }
 
     tbody.innerHTML = '';
     data.forEach(log => {
@@ -146,6 +147,23 @@ window.loadLogs = async () => {
         const d = new Date(log.created_at);
         const fechaFormat = `${d.toLocaleDateString()} - ${d.toLocaleTimeString()}`;
         
+        // ⚡ LÓGICA PARA RENDERIZAR EL JSONB
+        let detallesHtml = '<span style="color:var(--text-muted); font-size:0.8rem;">Sin detalles</span>';
+        if (log.details) {
+            // Convertimos el objeto JSON a texto con formato (indentación de 2 espacios)
+            const jsonStr = JSON.stringify(log.details, null, 2);
+            detallesHtml = `
+                <details>
+                    <summary style="color:var(--sys-blue); cursor:pointer; font-size:0.8rem; font-weight:600; outline:none;">
+                        Ver Datos JSON
+                    </summary>
+                    <pre style="background:var(--bg-elevated); border:1px solid var(--border-color); padding:10px; border-radius:6px; font-size:0.75rem; max-height:150px; max-width:250px; overflow:auto; margin-top:5px; color:var(--sys-green-main);">
+${escapeHtml(jsonStr)}
+                    </pre>
+                </details>
+            `;
+        }
+
         tr.innerHTML = `
             <td style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">${fechaFormat}</td>
             <td>
@@ -156,6 +174,7 @@ window.loadLogs = async () => {
             <td style="text-transform: uppercase; font-size: 0.8rem; font-weight: bold; color: var(--text-primary);">${log.table_name}</td>
             <td style="font-family: monospace; color: var(--sys-orange);">${escapeHtml(log.ip_address)}</td>
             <td style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary);">${log.record_id ? escapeHtml(log.record_id.substring(0,8)) + '...' : '-'}</td>
+            <td>${detallesHtml}</td>
         `;
         tbody.appendChild(tr);
     });

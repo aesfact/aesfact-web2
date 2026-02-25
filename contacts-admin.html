@@ -1,4 +1,4 @@
-w<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -257,66 +257,52 @@ w<!DOCTYPE html>
     <script src="js/app.js"></script>
     <script src="js/contacto.js"></script>
     <script>
-        // Inicializar Supabase
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         document.addEventListener('DOMContentLoaded', async () => {
-            // Verificar permisos
-            const permsRaw = sessionStorage.getItem('aesfact_permissions');
-            if (!permsRaw || !JSON.parse(permsRaw).includes('contactos')) {
-                alert('⛔ Acceso Restringido: No tienes permisos para ver los mensajes.');
-                window.location.href = 'admin.html';
-                return;
-            }
+            // Espera inteligente para asegurar que app.js cargó Supabase
+            setTimeout(async () => {
+                if (!window.supabaseClient) {
+                    alert("Error: Supabase no conectó.");
+                    return;
+                }
 
-            // Verificar sesión de Supabase
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            console.log('🔐 Session check:', session ? 'ACTIVE' : 'EXPIRED');
-            if (!session) {
-                alert('Sesión expirada. Ve a admin.html para iniciar sesión nuevamente.');
-                window.location.href = 'admin.html';
-                return;
-            }
+                const permsRaw = sessionStorage.getItem('aesfact_permissions');
+                if (!permsRaw || !JSON.parse(permsRaw).includes('contactos')) {
+                    alert('⛔ Acceso Restringido: No tienes permisos para ver los mensajes.');
+                    window.location.href = 'admin.html';
+                    return;
+                }
 
-            // Cargar mensajes
-            await loadContacts();
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    window.location.href = 'admin.html';
+                    return;
+                }
+
+                await window.loadContacts();
+            }, 300);
         });
 
-        async function loadContacts() {
-            console.log('💬 loadContacts() called');
-            const data = await readData();
-            console.log('📊 Contacts data:', data ? data.contacts : 'null');
+        // 1. Convertimos loadContacts en una función global (window)
+        // para que contacto.js pueda llamarla después de borrar o actualizar.
+        window.loadContacts = async function() {
+            const data = await window.readData();
             if (data && data.contacts) {
                 window.renderContactAdminList(data.contacts);
-            } else {
-                console.warn('❌ No contacts data');
             }
-        }
+        };
 
-        // Función para mostrar notificaciones
-        function showNotification(message, type = 'success') {
+        // 2. Convertimos showNotification en global para que contacto.js la use.
+        window.showNotification = function(message, type = 'success') {
             const notification = document.getElementById('notification');
+            if(!notification) return;
             notification.textContent = message;
             notification.className = `notification ${type === 'error' ? 'error' : ''}`;
             notification.classList.remove('hidden');
 
             setTimeout(() => {
                 notification.classList.add('hidden');
-            }, 5000);
-        }
-
-        // Función para escapar HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Función para hacer scroll hacia arriba
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
+            }, 3000);
+        };
     </script>
+</body>
+</html>

@@ -7,461 +7,39 @@
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
     <style>
-        :root {
-            --dark-blue: #04293a;
-            --blue-accent: #013a63;
-            --blue-light: #0d5d9e;
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --text-muted: #94a3b8;
-            --border-color: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            --radius-sm: 6px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary), #f1f5f9);
-            color: var(--text-primary);
-            line-height: 1.6;
-            margin: 0;
-            min-height: 100vh;
-        }
-
-        /* Header minimalista */
-        .admin-header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(8px);
-            background: rgba(255, 255, 255, 0.95);
-        }
-
-        .admin-header .members-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0;
-        }
-
-        .admin-header .back-link {
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-        }
-
-        .admin-header .back-link:hover {
-            background: var(--bg-primary);
-            color: var(--text-primary);
-        }
-
-        .admin-header h2 {
-            margin: 0;
-            color: var(--text-primary);
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        /* Contenedor principal */
+        :root { --dark-blue: #04293a; --blue-accent: #013a63; --blue-light: #0d5d9e; --bg-primary: #f8fafc; --bg-secondary: #ffffff; --text-primary: #1e293b; --text-secondary: #64748b; --border-color: #e2e8f0; --radius-md: 8px; --radius-lg: 12px; --transition: all 0.2s ease;}
+        body { background-color: var(--bg-primary); font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; color: var(--text-primary); }
         .members-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-
-        /* Secciones */
-        .members-section {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border-color);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            transition: var(--transition);
-        }
-
-        .members-section:hover {
-            box-shadow: var(--shadow-lg);
-            transform: translateY(-1px);
-        }
-
-        .members-section h3 {
-            margin: 0 0 1.5rem 0;
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        /* Formularios */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .form-grid label {
-            display: block;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .form-grid input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            background: var(--bg-secondary);
-            font-size: 0.875rem;
-            transition: var(--transition);
-        }
-
-        .form-grid input:focus {
-            outline: none;
-            border-color: var(--blue-light);
-            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
-        }
-
-        /* Inputs individuales */
-        input[type="text"],
-        input[type="email"],
-        input[type="url"] {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            background: var(--bg-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-            transition: var(--transition);
-        }
-
-        input[type="text"]:focus,
-        input[type="email"]:focus,
-        input[type="url"]:focus {
-            outline: none;
-            border-color: var(--blue-light);
-            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
-        }
-
-        /* File upload */
-        .file-upload-wrapper {
-            margin-bottom: 1rem;
-        }
-
-        .file-upload-wrapper input[type="file"] {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            background: var(--bg-secondary);
-            font-size: 0.875rem;
-        }
-
-        /* Botones */
-        .btn {
-            background: linear-gradient(135deg, var(--blue-accent), var(--blue-light));
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius-md);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.875rem;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn.muted {
-            background: linear-gradient(135deg, #64748b, #475569);
-        }
-
-        .btn.muted:hover {
-            background: linear-gradient(135deg, #475569, #334155);
-        }
-
-        /* Acciones admin */
-        .admin-actions {
-            display: flex;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-        }
-
-        /* Separador */
-        .section-divider {
-            margin: 2rem 0;
-            padding-top: 2rem;
-            border-top: 1px solid var(--border-color);
-        }
-
-        /* Barra de búsqueda */
-        .search-bar {
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .search-bar label {
-            display: block;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            background: var(--bg-secondary);
-            font-size: 0.875rem;
-            transition: var(--transition);
-        }
-
-        .search-bar input:focus {
-            outline: none;
-            border-color: var(--blue-light);
-            box-shadow: 0 0 0 3px rgba(13, 93, 158, 0.1);
-        }
-
-        /* Estilos mejorados para miembros admin */
-        .member-role-section {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow-sm);
-            transition: var(--transition);
-        }
-
-        .member-role-section:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .member-role-section h3 {
-            color: var(--text-primary);
-            margin: 0 0 1rem 0;
-            font-size: 1.25rem;
-            font-weight: 600;
-            border-bottom: 2px solid var(--border-color);
-            padding-bottom: 0.5rem;
-        }
-
-        /* Grid de miembros por rol */
-        .role-members-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-
-        /* Tarjetas de miembro mejoradas para admin */
-        .admin-member-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 1rem;
-            box-shadow: var(--shadow-sm);
-            transition: var(--transition);
-            position: relative;
-        }
-
-        .admin-member-card:hover {
-            box-shadow: var(--shadow-md);
-            transform: translateY(-2px);
-            border-color: var(--blue-light);
-        }
-
-        .member-card-content {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .member-photo-admin {
-            flex-shrink: 0;
-        }
-
-        .member-photo-admin img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--blue-accent);
-            transition: var(--transition);
-        }
-
-        .member-photo-admin img:hover {
-            border-color: var(--blue-light);
-            transform: scale(1.05);
-        }
-
-        .member-info-admin {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .member-info-admin h4 {
-            margin: 0 0 0.25rem 0;
-            color: var(--text-primary);
-            font-size: 1.1rem;
-            font-weight: 600;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-
-        .member-role-admin {
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.875rem;
-            margin: 0.125rem 0;
-        }
-
-        .member-email-admin {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            margin: 0.125rem 0;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-        }
-
-        .member-actions-admin {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-        }
-
-        .member-actions-admin .btn {
-            padding: 0.375rem 0.75rem;
-            font-size: 0.75rem;
-            border-radius: var(--radius-sm);
-        }
-
-        /* Notificaciones mejoradas */
-        .notification {
-            position: fixed;
-            top: 1.5rem;
-            right: 1.5rem;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            padding: 1rem 1.5rem;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            border: 1px solid var(--border-color);
-            z-index: 1000;
-            transition: var(--transition);
-            max-width: 400px;
-            backdrop-filter: blur(8px);
-            font-weight: 500;
-        }
-
-        .notification::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--blue-accent);
-            border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-        }
-
-        .notification.error::before {
-            background: #ef4444;
-        }
-
-        .notification.error {
-            border-color: #fecaca;
-        }
-
-        .notification.hidden {
-            opacity: 0;
-            transform: translateX(100%);
-            pointer-events: none;
-        }
-
-        /* Animación de entrada */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .notification {
-            animation: slideIn 0.3s ease-out;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .members-container {
-                padding: 1rem 0.5rem;
-            }
-
-            .members-section {
-                padding: 1.5rem;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-
-            .role-members-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .admin-header .members-container {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .admin-actions {
-                flex-direction: column;
-            }
-        }
+        .members-section { background: white; padding: 30px; border-radius: var(--radius-lg); box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid var(--border-color); }
+        .members-section h3 { margin-top: 0; color: var(--dark-blue); font-size: 1.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.85rem; color: var(--text-primary); }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.9rem; box-sizing: border-box; margin-bottom: 15px; background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; }
+        input:focus, select:focus { outline: none; border-color: var(--blue-light); box-shadow: 0 0 0 3px rgba(13,93,158,0.1); }.btn { background: linear-gradient(135deg, var(--blue-accent), var(--blue-light)); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-md); cursor: pointer; font-weight: bold; transition: var(--transition); }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn.muted { background: #64748b; }
+        .file-upload-wrapper { position: relative; margin-bottom: 10px; }
+        .file-upload-wrapper input { opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer; z-index: 2; }
+        .file-upload-wrapper::before { content: '📸 Seleccionar Foto de Perfil'; display: block; padding: 12px; border: 2px dashed var(--border-color); border-radius: var(--radius-md); text-align: center; background: #f8fafc; color: var(--text-secondary); transition: var(--transition); }
+        .file-upload-wrapper:hover::before { border-color: var(--blue-light); background: white; }
+        .media-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; min-height: 10px; }
+        .notification { position: fixed; top: 20px; right: 20px; background: white; color: var(--text-primary); padding: 15px 20px; border-radius: var(--radius-md); box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-left: 4px solid #10b981; z-index: 1000; transition: var(--transition); font-weight: 500; }
+        .notification.error { border-left-color: #ef4444; }
+        .notification.hidden { opacity: 0; transform: translateX(100%); pointer-events: none; }
+        
+        /* Grid de tarjetas para la lista admin */
+        .member-role-section { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
+        .member-role-section h3 { font-size: 1.25rem; margin: 0 0 1rem 0; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
+        .role-members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+        .admin-member-card { display: flex; align-items: center; gap: 15px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; }
+        .admin-member-card img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--blue-accent); }
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <div class="members-container">
-            <a href="admin.html" class="back-link">← Volver al Admin</a>
-            <h2>Gestión de Integrantes</h2>
+    <div style="background: white; padding: 15px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100;">
+        <div class="members-container" style="padding: 0; display: flex; justify-content: space-between; align-items: center;">
+            <a href="admin.html" style="text-decoration: none; color: var(--text-secondary); font-weight: bold; display: flex; align-items: center; gap: 5px;">← Volver al Admin</a>
+            <h2 style="margin: 0; color: var(--dark-blue); font-size: 1.25rem;">Gestión de Integrantes</h2>
         </div>
     </div>
 
@@ -476,7 +54,17 @@
                 </div>
                 <div>
                     <label>💼 Cargo / Rol</label>
-                    <input id="mem-role" placeholder="Ej: Presidente">
+                        <select id="mem-role">
+                            <option value="" disabled selected>Selecciona un rol...</option>
+                            <option value="Presidente">Presidente</option>
+                            <option value="Vicepresidente">Vicepresidente</option>
+                            <option value="Secretaría">Secretaría</option>
+                            <option value="Tesorería">Tesorería</option>
+                            <option value="Logística">Logística</option>
+                            <option value="Publirelacionista">Publirelacionista</option>
+                            <option value="Vocal">Vocal</option>
+                            <option value="Colaborador">Colaborador</option>
+                        </select>
                 </div>
                 <div>
                     <label>📧 Correo Electrónico</label>
@@ -495,19 +83,17 @@
             <div class="file-upload-wrapper">
                 <input id="mem-photo-file" type="file" accept="image/*">
             </div>
+
+            <div id="mem-photo-preview" class="media-preview"></div>
             
-            <div class="admin-actions" style="margin-top: 10px;">
-                <button id="add-mem" class="btn" onclick="addOrUpdateMember()">Guardar Integrante</button>
-                <button id="cancel-mem" class="btn muted hidden">Cancelar</button>
+            <div class="admin-actions" style="margin-top: 15px; display: flex; gap: 10px;">
+                <button id="add-mem" class="btn" onclick="addOrUpdateMember()" style="flex: 1;">Guardar Integrante</button>
+                <button id="cancel-mem" class="btn muted hidden" onclick="clearMemberForm()" style="flex: 1;">Cancelar Edición</button>
             </div>
 
-            <div style="margin-top: 35px; margin-bottom: 15px; padding-top: 20px; border-top: 1px solid #eee;">
-                <label style="font-size: 0.95rem; font-weight: bold; color: var(--blue-accent);">🔍 Filtrar lista de integrantes:</label>
-                <input id="search-mem" placeholder="Escribe el nombre para buscar..." style="margin-top: 5px;">
-            </div>
-
-            <div class="search-bar">
-                <input id="search-members" placeholder="🔍 Buscar miembros por nombre, rol o email..." oninput="filterMembers()">
+            <div style="margin-top: 30px; margin-bottom: 15px;">
+                <label>🔍 Buscar en la lista:</label>
+                <input id="search-members" placeholder="Escribe un nombre, rol o email..." style="margin-bottom: 0;">
             </div>
 
             <div id="member-admin-list"></div>
@@ -518,71 +104,71 @@
 
     <script src="js/app.js"></script>
     <script>
-        // Inicializar Supabase
-        window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Verificar permisos
-            const permsRaw = sessionStorage.getItem('aesfact_permissions');
-            if (!permsRaw || !JSON.parse(permsRaw).includes('integrantes')) {
-                alert('⛔ Acceso Restringido: No tienes permisos para gestionar integrantes.');
-                window.location.href = 'admin.html';
-                return;
-            }
-
-            // Verificar sesión de Supabase
-            const { data: { session } } = await window.supabaseClient.auth.getSession();
-            console.log('🔐 Session check:', session ? 'ACTIVE' : 'EXPIRED');
-            if (!session) {
-                alert('Sesión expirada. Ve a admin.html para iniciar sesión nuevamente.');
-                window.location.href = 'admin.html';
-                return;
-            }
-
-            // Cargar y mostrar miembros
-            await loadAndRenderMembers();
-
-        // Funcionalidad de búsqueda
-        document.getElementById('search-mem').addEventListener('input', (e) => {
-            filterMembers();
-        });
-        });
-
         let allMembersData = null;
 
-        async function loadAndRenderMembers(filter = '') {
-            console.log('👥 loadAndRenderMembers() called, filter:', filter);
-            const data = await readData();
-            console.log('📊 Members data:', data ? data.members : 'null');
-            if (!data || !data.members) {
-                console.warn('❌ No members data');
-                return;
-            }
+        document.addEventListener('DOMContentLoaded', async () => {
+            setTimeout(async () => {
+                const permsRaw = sessionStorage.getItem('aesfact_permissions');
+                if (!permsRaw || !JSON.parse(permsRaw).includes('integrantes')) {
+                    alert('⛔ Acceso Restringido.');
+                    window.location.href = 'admin.html'; return;
+                }
 
-            allMembersData = data.members; // Guardar para filtrado
-            renderMembersByRole(data.members, filter);
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) { window.location.href = 'admin.html'; return; }
+
+                await loadAndRenderMembers();
+            }, 300);
+
+            // Búsqueda en tiempo real
+            document.getElementById('search-members').addEventListener('input', () => { filterMembers(); });
+
+            // EVENTO DE PREVISUALIZACIÓN DE FOTO DE PERFIL
+            document.getElementById('mem-photo-file').addEventListener('change', function(e) {
+                const preview = document.getElementById('mem-photo-preview');
+                preview.innerHTML = ''; 
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const div = document.createElement('div');
+                        div.style.cssText = 'position:relative;width:100px;height:100px;';
+                        div.innerHTML = `
+                            <img src="${event.target.result}" style="width:100px;height:100px;object-fit:cover;border-radius:50%;border:3px solid var(--sys-green-main);">
+                            <span style="position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); background:#10b981; color:white; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:bold;">NUEVA</span>
+                        `;
+                        preview.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        async function loadAndRenderMembers() {
+            const data = await window.readData();
+            if (!data || !data.members) return;
+            allMembersData = data.members;
+            renderMembersByRole(data.members);
         }
 
-        function renderMembersByRole(members, filter = '') {
-            // Aplicar filtro si existe
-            if (filter) {
-                const f = filter.toLowerCase();
-                members = members.filter(m =>
-                    m.name.toLowerCase().includes(f) ||
-                    m.role.toLowerCase().includes(f) ||
-                    m.email.toLowerCase().includes(f)
-                );
-            }
+        function filterMembers() {
+            const searchTerm = document.getElementById('search-members').value.toLowerCase().trim();
+            if (!allMembersData) return;
+            if (!searchTerm) { renderMembersByRole(allMembersData); return; }
 
+            const filtered = allMembersData.filter(m =>
+                m.name.toLowerCase().includes(searchTerm) ||
+                m.role.toLowerCase().includes(searchTerm) ||
+                m.email.toLowerCase().includes(searchTerm)
+            );
+            renderMembersByRole(filtered);
+        }
+
+        function renderMembersByRole(members) {
             const container = document.getElementById('member-admin-list');
             container.innerHTML = '';
+            if (members.length === 0) { container.innerHTML = '<p class="muted">No se encontraron integrantes.</p>'; return; }
 
-            if (members.length === 0) {
-                container.innerHTML = '<p class="muted" style="text-align: center; padding: 20px;">No se encontraron integrantes.</p>';
-                return;
-            }
-
-            // Definir jerarquía de roles (igual que en la parte pública)
             const roleGroups = [
                 { title: 'Presidente y Vicepresidenta', roles: ['Presidente', 'Presidenta', 'Vicepresidente', 'Vicepresidenta', 'Vicepresedenta'] },
                 { title: 'Logística', roles: ['Logistica', 'Logística'] },
@@ -596,181 +182,162 @@
             const normalizeRole = r => (r || '').trim().toLowerCase();
             const usedIds = new Set();
 
-            // Renderizar cada grupo de roles
             roleGroups.forEach(group => {
-                const section = document.createElement('div');
-                section.className = 'member-role-section';
+                const section = document.createElement('div'); section.className = 'member-role-section';
                 section.innerHTML = `<h3>${group.title}</h3>`;
+                const membersGrid = document.createElement('div'); membersGrid.className = 'role-members-grid';
 
-                const membersGrid = document.createElement('div');
-                membersGrid.className = 'role-members-grid';
-
-                const matchingMembers = members.filter(member =>
-                    group.roles.map(normalizeRole).includes(normalizeRole(member.role))
-                );
+                const matchingMembers = members.filter(m => group.roles.map(normalizeRole).includes(normalizeRole(m.role)));
 
                 matchingMembers.forEach(member => {
-                    const card = document.createElement('div');
-                    card.className = 'admin-member-card';
-
+                    const card = document.createElement('div'); card.className = 'admin-member-card';
                     const photoUrl = member.photo || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E";
-
+                    
                     card.innerHTML = `
-                        <div class="member-card-content">
-                            <div class="member-photo-admin">
-                                <img src="${photoUrl}" alt="${escapeHtml(member.name)}">
+                        <img src="${photoUrl}" alt="Foto">
+                        <div style="flex:1;">
+                            <h4 style="margin:0 0 2px 0;">${escapeHtml(member.name)}</h4>
+                            <div style="color:var(--text-secondary); font-size:0.85rem;">🎭 ${escapeHtml(member.role)}</div>
+                            <div style="color:var(--text-muted); font-size:0.8rem;">📧 ${escapeHtml(member.email)}</div>
+                            <div style="margin-top:8px; display:flex; gap:5px;">
+                                <button class="btn" onclick="editMember('${member.id}')" style="padding:4px 8px; font-size:0.75rem;">Editar</button>
+                                <button class="btn muted" onclick="deleteMember('${member.id}')" style="padding:4px 8px; font-size:0.75rem; background:#ef4444;">Eliminar</button>
                             </div>
-                            <div class="member-info-admin">
-                                <h4>${escapeHtml(member.name)}</h4>
-                                <div class="member-role-admin">🎭 ${escapeHtml(member.role)}</div>
-                                <div class="member-email-admin">📧 ${escapeHtml(member.email)}</div>
-                                ${member.phone ? `<div class="member-email-admin">📱 ${escapeHtml(member.phone)}</div>` : ''}
-                            </div>
-                        </div>
-                        <div class="member-actions-admin">
-                            <button class="btn" onclick="editMember('${member.id}')">Editar</button>
-                            <button class="btn muted" onclick="deleteMember('${member.id}')">Eliminar</button>
                         </div>
                     `;
-
                     membersGrid.appendChild(card);
                     usedIds.add(member.id);
                 });
 
-                if (matchingMembers.length > 0) {
-                    section.appendChild(membersGrid);
-                    container.appendChild(section);
-                }
+                if (matchingMembers.length > 0) { section.appendChild(membersGrid); container.appendChild(section); }
             });
 
-            // Miembros que no encajan en ningún grupo definido
-            const otherMembers = members.filter(member => !usedIds.has(member.id));
+            // Agrupar los "Otros"
+            const otherMembers = members.filter(m => !usedIds.has(m.id));
             if (otherMembers.length > 0) {
-                const section = document.createElement('div');
-                section.className = 'member-role-section';
-                section.innerHTML = `<h3>Otros</h3>`;
-
-                const membersGrid = document.createElement('div');
-                membersGrid.className = 'role-members-grid';
-
+                const section = document.createElement('div'); section.className = 'member-role-section';
+                section.innerHTML = `<h3>Otros Roles</h3>`;
+                const membersGrid = document.createElement('div'); membersGrid.className = 'role-members-grid';
                 otherMembers.forEach(member => {
-                    const card = document.createElement('div');
-                    card.className = 'admin-member-card';
-
+                    const card = document.createElement('div'); card.className = 'admin-member-card';
                     const photoUrl = member.photo || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E";
-
                     card.innerHTML = `
-                        <div class="member-card-content">
-                            <div class="member-photo-admin">
-                                <img src="${photoUrl}" alt="${escapeHtml(member.name)}">
+                        <img src="${photoUrl}" alt="Foto">
+                        <div style="flex:1;">
+                            <h4 style="margin:0 0 2px 0;">${escapeHtml(member.name)}</h4>
+                            <div style="color:var(--text-secondary); font-size:0.85rem;">🎭 ${escapeHtml(member.role)}</div>
+                            <div style="margin-top:8px; display:flex; gap:5px;">
+                                <button class="btn" onclick="editMember('${member.id}')" style="padding:4px 8px; font-size:0.75rem;">Editar</button>
+                                <button class="btn muted" onclick="deleteMember('${member.id}')" style="padding:4px 8px; font-size:0.75rem; background:#ef4444;">Eliminar</button>
                             </div>
-                            <div class="member-info-admin">
-                                <h4>${escapeHtml(member.name)}</h4>
-                                <div class="member-role-admin">🎭 ${escapeHtml(member.role)}</div>
-                                <div class="member-email-admin">📧 ${escapeHtml(member.email)}</div>
-                                ${member.phone ? `<div class="member-email-admin">📱 ${escapeHtml(member.phone)}</div>` : ''}
-                            </div>
-                        </div>
-                        <div class="member-actions-admin">
-                            <button class="btn" onclick="editMember('${member.id}')">Editar</button>
-                            <button class="btn muted" onclick="deleteMember('${member.id}')">Eliminar</button>
                         </div>
                     `;
-
                     membersGrid.appendChild(card);
                 });
-
-                section.appendChild(membersGrid);
-                container.appendChild(section);
+                section.appendChild(membersGrid); container.appendChild(section);
             }
-        }
-
-        function filterMembers() {
-            const searchTerm = document.getElementById('search-members').value.toLowerCase().trim();
-            if (!allMembersData) return;
-
-            if (!searchTerm) {
-                renderMembersByRole(allMembersData);
-                return;
-            }
-
-            const filteredMembers = allMembersData.filter(member =>
-                member.name.toLowerCase().includes(searchTerm) ||
-                member.role.toLowerCase().includes(searchTerm) ||
-                member.email.toLowerCase().includes(searchTerm) ||
-                (member.phone && member.phone.toLowerCase().includes(searchTerm))
-            );
-
-            renderMembersByRole(filteredMembers);
         }
 
         async function editMember(id) {
-            const data = await readData();
-            const mem = data.members.find(m => m.id === id);
+            const mem = allMembersData.find(m => m.id === id);
             if (!mem) return;
-
-            // Scroll to top para indicar que se está editando
-            scrollToTop();
 
             document.getElementById('mem-name').value = mem.name || '';
             document.getElementById('mem-role').value = mem.role || '';
             document.getElementById('mem-email').value = mem.email || '';
             document.getElementById('mem-phone').value = mem.phone || '';
+            document.getElementById('mem-photo-url').value = mem.photo || '';
 
-            currentEditId = id;
-            const addBtn = document.getElementById('add-mem');
-            addBtn.textContent = 'Actualizar Integrante';
+            // Dibujar imagen existente
+            const preview = document.getElementById('mem-photo-preview');
+            preview.innerHTML = '';
+            if (mem.photo) {
+                const div = document.createElement('div');
+                div.style.cssText = 'position:relative;width:100px;height:100px;';
+                div.innerHTML = `
+                    <img src="${mem.photo}" style="width:100px;height:100px;object-fit:cover;border-radius:50%;border:2px solid var(--border-color);">
+                    <button type="button" onclick="removeMemberPhoto()" style="position:absolute;top:0;right:0;background:#ef4444;color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,0.2);">✕</button>
+                `;
+                preview.appendChild(div);
+            }
 
-            const cancelBtn = document.getElementById('cancel-mem');
-            cancelBtn.classList.remove('hidden');
-            cancelBtn.onclick = clearMemberForm;
+            window.currentEditId = id;
+            document.getElementById('add-mem').textContent = 'Actualizar Integrante';
+            document.getElementById('cancel-mem').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
-        async function updateMember(id) {
+        window.removeMemberPhoto = async function() {
+            if(confirm('¿Borrar la foto de perfil del servidor permanentemente?')) {
+                const photoUrl = document.getElementById('mem-photo-url').value;
+                if(photoUrl) {
+                    await window.deleteFileFromStorage(photoUrl);
+                    document.getElementById('mem-photo-url').value = ''; 
+                    if (window.currentEditId) {
+                        await window.supabaseClient.from('members').update({ photo: '' }).eq('id', window.currentEditId);
+                    }
+                }
+                document.getElementById('mem-photo-preview').innerHTML = '';
+                showNotification('Foto eliminada.');
+            }
+        };
+
+        async function addOrUpdateMember() {
             const name = document.getElementById('mem-name').value.trim();
             const role = document.getElementById('mem-role').value.trim();
             const email = document.getElementById('mem-email').value.trim();
             const phone = document.getElementById('mem-phone').value.trim();
+            let photoUrl = document.getElementById('mem-photo-url').value.trim();
+            const fileInput = document.getElementById('mem-photo-file');
 
-            if (!name || !role || !email) {
-                showNotification('Nombre, rol y email son obligatorios.', 'error');
-                return;
-            }
+            if (!name || !role || !email) { showNotification('Nombre, rol y email son obligatorios.', 'error'); return; }
+
+            const btn = document.getElementById('add-mem');
+            const originalText = btn.textContent;
+            btn.disabled = true; btn.textContent = 'Procesando...';
 
             try {
-                const { error } = await window.supabaseClient
-                    .from('members')
-                    .update({ name, role, email, phone })
-                    .eq('id', id);
+                if (fileInput.files.length > 0) {
+                    btn.textContent = 'Subiendo foto...';
+                    const uploadedUrl = await window.uploadImageToStorage(fileInput.files[0], 'integrantes');
+                    if (uploadedUrl) photoUrl = uploadedUrl;
+                }
 
-                if (error) throw error;
+                btn.textContent = 'Guardando datos...';
+                const payload = { name: name, role: role, email: email, phone: phone || '', photo: photoUrl };
 
-                showNotification('Integrante actualizado correctamente.');
+                if (window.currentEditId) {
+                    const { error } = await window.supabaseClient.from('members').update(payload).eq('id', window.currentEditId);
+                    if (error) throw error;
+                    showNotification('Integrante actualizado correctamente.');
+                } else {
+                    payload.id = Date.now().toString(); 
+                    const { error } = await window.supabaseClient.from('members').insert([payload]);
+                    if (error) throw error;
+                    showNotification('Integrante agregado correctamente.');
+                }
+
                 clearMemberForm();
                 await loadAndRenderMembers();
             } catch (e) {
-                console.error(e);
-                showNotification('Error al actualizar integrante.', 'error');
+                console.error("🚨 Error:", e);
+                showNotification('Error al guardar. Verifica los datos.', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = originalText;
             }
         }
 
         async function deleteMember(id) {
-            if (!confirm('¿Estás seguro de eliminar este integrante?')) return;
-
+            if (!confirm('¿Estás seguro de eliminar a este integrante?')) return;
             try {
-                const { error } = await window.supabaseClient
-                    .from('members')
-                    .delete()
-                    .eq('id', id);
+                const mem = allMembersData.find(m => m.id === id);
+                if(mem && mem.photo) await window.deleteFileFromStorage(mem.photo);
 
+                const { error } = await window.supabaseClient.from('members').delete().eq('id', id);
                 if (error) throw error;
-
                 showNotification('Integrante eliminado correctamente.');
                 await loadAndRenderMembers();
-            } catch (e) {
-                console.error(e);
-                showNotification('Error al eliminar integrante.', 'error');
-            }
+            } catch (e) { showNotification('Error al eliminar integrante.', 'error'); }
         }
 
         function clearMemberForm() {
@@ -779,78 +346,26 @@
             document.getElementById('mem-email').value = '';
             document.getElementById('mem-phone').value = '';
             document.getElementById('mem-photo-url').value = '';
+            document.getElementById('mem-photo-file').value = '';
+            document.getElementById('mem-photo-preview').innerHTML = '';
             document.getElementById('add-mem').textContent = 'Guardar Integrante';
             document.getElementById('cancel-mem').classList.add('hidden');
-            currentEditId = null;
+            window.currentEditId = null;
         }
 
         function showNotification(message, type = 'success') {
             const notif = document.getElementById('notification');
+            if(!notif) return;
             notif.textContent = message;
-            notif.className = `notification ${type}`;
+            notif.className = `notification ${type === 'error' ? 'error' : ''}`;
             notif.classList.remove('hidden');
             setTimeout(() => notif.classList.add('hidden'), 3000);
         }
 
-        async function addOrUpdateMember() {
-            const name = document.getElementById('mem-name').value.trim();
-            const role = document.getElementById('mem-role').value.trim();
-            const email = document.getElementById('mem-email').value.trim();
-            const phone = document.getElementById('mem-phone').value.trim();
-
-            if (!name || !role || !email) {
-                showNotification('Nombre, rol y email son obligatorios.', 'error');
-                return;
-            }
-
-            const btn = document.getElementById('add-mem');
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = 'Guardando...';
-
-            try {
-                if (currentEditId) {
-                    // Update
-                    const { error } = await window.supabaseClient
-                        .from('members')
-                        .update({ name, role, email, phone })
-                        .eq('id', currentEditId);
-
-                    if (error) throw error;
-                    showNotification('Integrante actualizado correctamente.');
-                } else {
-                    // Insert
-                    const { error } = await window.supabaseClient
-                        .from('members')
-                        .insert([{ name, role, email, phone }]);
-
-                    if (error) throw error;
-                    showNotification('Integrante agregado correctamente.');
-                }
-
-                clearMemberForm();
-                await loadAndRenderMembers();
-            } catch (e) {
-                console.error(e);
-                showNotification('Error al guardar integrante.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = originalText;
-            }
-        }
-
-        // Función para escapar HTML
         function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Función para hacer scroll hacia arriba
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            if (!text) return '';
+            const div = document.createElement('div'); div.textContent = text; return div.innerHTML;
         }
     </script>
+</body>
+</html>
