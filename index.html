@@ -21,12 +21,12 @@
   <div id="sidebar-overlay" class="sidebar-overlay"></div>
 
   <main class="container">
-    <section class="card hero-card">
+    <section class="card e4-strategy-card">
       <h1 class="hero-title">Asociación de Estudiantes de la Facultad de Ciencia y <span id="admin-trigger" style="user-select: none;">Tecnología</span></h1>
       <p class="muted">Bienvenido — somos la voz estudiantil de la Facultad. Aquí encontrarás noticias, proyectos y las personas que integran nuestra asociación.</p>
     </section>
 
-    <section class="card impact-section" onclick="window.location.href='projects.html'">
+    <section class="card e4-strategy-card" onclick="window.location.href='projects.html'">
       <h2 style="transition: color 0.3s ease;">Nuestro Impacto 2026</h2>
       <p class="muted" style="font-size: 1.1rem;">Conoce el progreso de nuestro plan de trabajo anual, Modelo E4. Haz clic para ver los detalles.</p>
       
@@ -58,17 +58,67 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="card e4-strategy-card">
+      <div class="e4-intro">
+        <span class="e4-tag">Sistema Estratégico</span>
+        <h2>Modelo E4: Propósito y Dirección</h2>
+        <p class="muted">Un sistema estructurado que organiza nuestro plan anual en cuatro etapas progresivas y conectadas.</p>
+      </div>
+
+      <div class="e4-steps-grid">
+        <div class="e4-item" data-reveal-e4>
+          <div class="e4-step-num">01</div>
+          <div class="e4-step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0d5d9e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+          </div>
+          <h3>Educación</h3>
+          <p>Fortalecimiento académico y vanguardia tecnológica.</p>
+        </div>
+
+        <div class="e4-item" data-reveal-e4>
+          <div class="e4-step-num">02</div>
+          <div class="e4-step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4.5 9.5a10.5 10.5 0 0 0 15 0L12 2z"></path><path d="M12 22v-9"></path></svg>
+          </div>
+          <h3>Ecología</h3>
+          <p>Compromiso ambiental y sostenibilidad activa.</p>
+        </div>
+
+        <div class="e4-item" data-reveal-e4>
+          <div class="e4-step-num">03</div>
+          <div class="e4-step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f57f17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <h3>Empatía</h3>
+          <p>Responsabilidad social y servicio a la comunidad.</p>
+        </div>
+
+        <div class="e4-item" data-reveal-e4>
+          <div class="e4-step-num">04</div>
+          <div class="e4-step-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#c62828" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          </div>
+          <h3>Integración</h3>
+          <p>Cohesión estudiantil y sostenibilidad institucional.</p>
+        </div>
+      </div>
+
+      <div class="e4-connector-msg">
+        <p>Cada etapa alimenta a la siguiente, creando un ciclo de desarrollo profesional continuo.</p>
+      </div>
+    </section>
+
+    <section class="card e4-strategy-card">
       <h2>Valores</h2>
       <ul id="valores"></ul>
     </section>
 
-    <section class="card">
+    <section class="card e4-strategy-card">
       <h2>Noticias (Carrusel)</h2>
       <div id="news-carousel" class="carousel"></div>
     </section>
 
-    <section class="card">
+    <section class="card e4-strategy-card">
       <h2 id="aesfact-title">AESFACT <span id="aesfact-year"></span></h2>
       <div class="aesfact-media">
         <img id="aesfact-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1280' height='720'%3E%3Crect fill='%2304293a' width='1280' height='720'/%3E%3Ctext x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='48' fill='white'%3EAESFACT%3C/text%3E%3C/svg%3E" alt="AESFACT banner">
@@ -79,7 +129,6 @@
 
   <footer class="site-footer"><div class="container"><small>&copy; Asociación de Estudiantes - UGB</small></div></footer>
 
-  <!-- Modal para expandir noticias -->
   <div id="news-modal" class="modal hidden">
     <div class="modal-content">
       <button class="modal-close" onclick="closeNewsModal()">✕</button>

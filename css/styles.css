@@ -722,3 +722,122 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue-lig
     .rings-container { gap: 20px; }
     .ring-box { width: 45%; } /* 2 anillos por fila en celulares */
 }
+
+/* --- SECCIÓN MODELO E4 ESTRATÉGICO --- */
+
+/* Contenedor principal de la card */
+.e4-strategy-card {
+    background: #ffffff;
+    border-top: 5px solid #0d5d9e; /* Color institucional Educación */
+    position: relative;
+}
+
+.e4-intro {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.e4-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(13, 93, 158, 0.1);
+    color: #0d5d9e;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 50px;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+/* Grid de Pasos */
+.e4-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.e4-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 30px 20px;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Estado inicial para la animación de JS */
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Animación cuando JS activa la clase */
+.e4-item.reveal-active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.e4-item:hover {
+    transform: translateY(-8px);
+    background: white;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Colores dinámicos por etapa al hacer hover */
+.e4-item:nth-child(1):hover { border-bottom: 4px solid #0d5d9e; }
+.e4-item:nth-child(2):hover { border-bottom: 4px solid #2e7d32; }
+.e4-item:nth-child(3):hover { border-bottom: 4px solid #f57f17; }
+.e4-item:nth-child(4):hover { border-bottom: 4px solid #c62828; }
+
+.e4-step-num {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 2rem;
+    font-weight: 900;
+    color: rgba(0, 0, 0, 0.04);
+}
+
+.e4-step-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 20px;
+}
+
+.e4-step-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.e4-item h3 {
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.e4-item p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #64748b;
+}
+
+/* Mensaje de cierre */
+.e4-connector-msg {
+    text-align: center;
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 20px;
+    margin-top: 10px;
+}
+
+.e4-connector-msg p {
+    font-style: italic;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .e4-steps-grid {
+        grid-template-columns: 1fr;
+    }
+}

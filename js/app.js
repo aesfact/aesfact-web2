@@ -854,6 +854,42 @@ async function loadAdminLists() {
 
 }
 
+/**
+ * MODELO E4 - ANIMACIÓN DE ENTRADA ESTRATÉGICA
+ * Activa las tarjetas en secuencia cuando la sección es visible.
+ */
+document.addEventListener("DOMContentLoaded", () => {
+    const e4Cards = document.querySelectorAll("[data-reveal-e4]");
+    
+    // Configuración del observador: se activa cuando el 20% de la sección es visible
+    const observerOptions = {
+        threshold: 0.2,
+        rootMargin: "0px 0px -50px 0px"
+    };
+
+    const e4Observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                // Aplicar retraso progresivo a cada tarjeta (efecto cascada)
+                e4Cards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add("reveal-active");
+                    }, index * 180); // 180ms entre cada pilar
+                });
+                
+                // Dejar de observar una vez que la animación se ha ejecutado
+                e4Observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Seleccionamos el contenedor padre para iniciar la observación
+    const e4Section = document.querySelector(".e4-strategy-card");
+    if (e4Section) {
+        e4Observer.observe(e4Section);
+    }
+});
+
 // --- FUNCIONES COMUNES ---
 function escapeHtml(t) { return t ? t.toString().replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])) : ''; }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2); }
