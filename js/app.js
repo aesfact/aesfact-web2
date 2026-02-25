@@ -155,7 +155,14 @@ async function renderPublic() {
     render('news-list',data.news,n=>{
         const a=document.createElement('article');a.className='card';
         const img=n.image?`<img src="${n.image}" alt="Img">`:`<div style="height:200px;background:#04293a;display:flex;align-items:center;justify-content:center;color:white;">Sin imagen</div>`;
-        a.innerHTML=`${img}<div class="news-content"><h4>${escapeHtml(n.title)}</h4><small>${n.date}</small><p>${escapeHtml(n.body.substring(0,120))}...</p><a class="read-more" onclick="openNewsModal('${escapeHtml(n.title)}','${n.date}','${escapeHtml(n.body)}','${n.image||''}')">Leer más →</a></div>`; return a;
+        
+        // --- LA CORRECCIÓN ESTÁ AQUÍ ---
+        // Limpiamos los saltos de línea del body ANTES de meterlo al onclick
+        const safeTitle = escapeHtml(n.title).replace(/'/g, "\\'");
+        const safeBody = escapeHtml(n.body).replace(/'/g, "\\'").replace(/\n/g, '\\n'); 
+        
+        a.innerHTML=`${img}<div class="news-content"><h4>${escapeHtml(n.title)}</h4><small>${n.date || 'Sin fecha'}</small><p>${escapeHtml(n.body.substring(0,120))}...</p><a class="read-more" onclick="openNewsModal('${safeTitle}','${n.date || ''}','${safeBody}','${n.image||''}')">Leer más →</a></div>`; 
+        return a;
     });
     initCarousel(data.news.slice(0,5));
     const gl=document.getElementById('gallery-list');if(gl){gl.innerHTML='';data.gallery.forEach(i=>{const d=document.createElement('div');d.className='gallery-item';d.innerHTML=`<img src="${i}" onclick="openPhotoViewer('${i}')">`;gl.appendChild(d)})}
