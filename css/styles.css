@@ -931,3 +931,26 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue-lig
 @media (max-width: 768px) {
     .e4-flow-container { grid-template-columns: 1fr; }
 }
+
+/* ========================================================
+   AJUSTES PARA PALABRAS LARGAS EN TARJETAS DE INTEGRANTES
+   ======================================================== */
+
+/* Para la vista pública (members.html) */
+.member-card p.muted {
+    font-size: 0.8rem !important;      /* Hace la letra ligeramente más pequeña */
+    word-break: normal !important;     /* Evita que corte letras sueltas */
+    overflow-wrap: break-word;         /* Solo baja de línea si la palabra entera no cabe */
+    hyphens: auto;                     /* Si la tiene que cortar, le pone un guion ortográfico (-) */
+}
+
+/* Para asegurar que las tarjetas públicas no se apachurren de más en móviles */
+.quadrant-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+}
+
+/* Para la vista de Admin (members-admin.html) */
+.admin-member-card div {
+    word-break: normal !important;
+    overflow-wrap: break-word;
+}
