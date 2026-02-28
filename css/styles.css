@@ -936,21 +936,15 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue-lig
    AJUSTES PARA PALABRAS LARGAS EN TARJETAS DE INTEGRANTES
    ======================================================== */
 
-/* Para la vista pública (members.html) */
-.member-card p.muted {
-    font-size: 0.8rem !important;      /* Hace la letra ligeramente más pequeña */
-    word-break: normal !important;     /* Evita que corte letras sueltas */
-    overflow-wrap: break-word;         /* Solo baja de línea si la palabra entera no cabe */
-    hyphens: auto;                     /* Si la tiene que cortar, le pone un guion ortográfico (-) */
+/* Para la vista pública y el panel Admin */
+.member-card p.muted, .admin-member-card div {
+    font-size: 0.9rem !important;      /* Tamaño legible */
+    word-break: keep-all !important;   /* OBLIGA a mantener la palabra entera */
+    overflow-wrap: normal !important;  /* Desactiva el salto de línea a la fuerza */
+    hyphens: none !important;          /* Prohíbe al navegador inventar sílabas */
 }
 
-/* Para asegurar que las tarjetas públicas no se apachurren de más en móviles */
+/* Cambiamos auto-fill por auto-fit para que estire las tarjetas si son pocas */
 .quadrant-grid {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
-}
-
-/* Para la vista de Admin (members-admin.html) */
-.admin-member-card div {
-    word-break: normal !important;
-    overflow-wrap: break-word;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)) !important;
 }
