@@ -735,7 +735,19 @@ function initCarousel(n) {
     }, 5000); 
 }
 function openPhotoViewer(s){const p=document.getElementById('photo-viewer'),i=document.getElementById('photo-viewer-img');if(p&&i){i.src=s;p.classList.add('open')}}
-function renderMembersByRole(m){ const c=document.getElementById('members-list');if(!c)return; c.innerHTML=''; const q=[{title:'Presidente y Vicepresidenta',roles:['Presidente','Presidenta','Vicepresidente','Vicepresidenta','Vicepresedenta']},{title:'Logística',roles:['Logistica','Logística']},{title:'Publirelacionista',roles:['Publirelacionista','Relaciones Públicas','Relaciones Publicas']},{title:'Tesorería',roles:['Tesorero','Tesorería','Tesorera']},{title:'Secretaria',roles:['Secretaria','Secretario']},{title:'Vocales',roles:['Vocal','Vocales']},{title:'Colaboradores',roles:['Colaborador','Colaboradores']}]; const cr=(x)=>{ const d=document.createElement('div'); d.className='member-card'; const i=x.photo||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Crect width='220' height='220' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E"; d.innerHTML=`<img src="${i}" onclick="openPhotoViewer('${i}')"><div><h4>${escapeHtml(x.name)}</h4><p class="muted">${escapeHtml(x.role)}</p><p>${escapeHtml(x.email)}</p></div>`; return d; }; const norm=r=>(r||'').trim().toLowerCase(); const u=new Set(); q.forEach(g=>{ const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>${g.title}</h3>`; const d=document.createElement('div'); d.className='quadrant-grid'; const mat=m.filter(x=>g.roles.map(norm).includes(norm(x.role))); mat.forEach(x=>{d.appendChild(cr(x));u.add(x.id)}); if(mat.length){s.appendChild(d); c.appendChild(s);} }); const oth=m.filter(x=>!u.has(x.id)); if(oth.length){ const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>Otros</h3>`; const d=document.createElement('div'); d.className='quadrant-grid'; oth.forEach(x=>d.appendChild(cr(x))); s.appendChild(d); c.appendChild(s); } }
+function renderMembersByRole(m){ 
+    const c=document.getElementById('members-list');
+    if(!c)return; c.innerHTML=''; 
+    const q=[
+        {title:'Presidente y Vicepresidenta',roles:['Presidente','Presidenta','Vicepresidente','Vicepresidenta','Vicepresedenta']},
+        {title:'Logística',roles:['Logistica','Logística']},
+        {title:'Publirelacionista',roles:['Publirelacionista','Relaciones Públicas','Relaciones Publicas']},
+        {title:'Tesorería',roles:['Tesorero','Tesorería','Tesorera']},
+        {title:'Secretaría',roles:['Secretaria','Secretario','Secretaría']},
+        {title:'Vocales',roles:['Vocal','Vocales']},
+        {title:'Colaboradores',roles:['Colaborador','Colaboradores']}]; 
+        const cr=(x)=>{ const d=document.createElement('div'); d.className='member-card'; 
+        const i=x.photo||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Crect width='220' height='220' fill='%23ddd'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3E👤%3C/text%3E%3C/svg%3E"; d.innerHTML=`<img src="${i}" onclick="openPhotoViewer('${i}')"><div><h4>${escapeHtml(x.name)}</h4><p class="muted">${escapeHtml(x.role)}</p><p>${escapeHtml(x.email)}</p></div>`; return d; }; const norm=r=>(r||'').trim().toLowerCase(); const u=new Set(); q.forEach(g=>{ const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>${g.title}</h3>`; const d=document.createElement('div'); d.className='quadrant-grid'; const mat=m.filter(x=>g.roles.map(norm).includes(norm(x.role))); mat.forEach(x=>{d.appendChild(cr(x));u.add(x.id)}); if(mat.length){s.appendChild(d); c.appendChild(s);} }); const oth=m.filter(x=>!u.has(x.id)); if(oth.length){ const s=document.createElement('section'); s.className='card quadrant'; s.innerHTML=`<h3>Otros</h3>`; const d=document.createElement('div'); d.className='quadrant-grid'; oth.forEach(x=>d.appendChild(cr(x))); s.appendChild(d); c.appendChild(s); } }
 
 // Animación de aparición para el Modelo E4
 const observerOptions = {
