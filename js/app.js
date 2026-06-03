@@ -735,6 +735,46 @@ function initCarousel(n) {
     }, 5000); 
 }
 function openPhotoViewer(s){const p=document.getElementById('photo-viewer'),i=document.getElementById('photo-viewer-img');if(p&&i){i.src=s;p.classList.add('open')}}
+
+// Función para mover las imágenes en la galería de proyectos
+window.moveSlide = function(sid, dir) {
+    const wrapper = document.getElementById(sid);
+    if (!wrapper) return;
+    
+    // Obtener todos los slides de esta galería en específico
+    const slides = wrapper.querySelectorAll('.project-slide');
+    if (slides.length <= 1) return;
+
+    let currentIndex = 0;
+    
+    // Encontrar el slide activo y quitarle la clase 'active'
+    slides.forEach((slide, index) => {
+        if (slide.classList.contains('active')) {
+            currentIndex = index;
+            slide.classList.remove('active');
+        }
+    });
+
+    // Calcular la posición de la nueva imagen
+    let newIndex = currentIndex + dir;
+    
+    // Si llegamos al principio, saltar al final (y viceversa)
+    if (newIndex < 0) {
+        newIndex = slides.length - 1;
+    } else if (newIndex >= slides.length) {
+        newIndex = 0;
+    }
+
+    // Agregar la clase 'active' a la nueva imagen para mostrarla
+    slides[newIndex].classList.add('active');
+    
+    // Actualizar el número del contador (ej: el "2" en 2/3)
+    const counterSpan = document.getElementById(`${sid}-c`);
+    if (counterSpan) {
+        counterSpan.textContent = newIndex + 1;
+    }
+};
+
 function renderMembersByRole(m){ 
     const c=document.getElementById('members-list');
     if(!c)return; c.innerHTML=''; 
