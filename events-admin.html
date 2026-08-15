@@ -92,7 +92,7 @@
                 card.innerHTML = `
                     <h4>${escapeHtml(evt.title)}</h4>
                     <p class="muted">Fecha: ${evt.date || 'Sin fecha asignada'}</p>
-                    <p>${escapeHtml(evt.desc)}</p>
+                    <p style="white-space: pre-wrap;">${escapeHtml(evt.desc)}</p>
                     <button class="btn" onclick="editEvent('${evt.id}')">Editar</button>
                     <button class="btn muted" onclick="deleteEvent('${evt.id}')">Eliminar</button>
                 `;
