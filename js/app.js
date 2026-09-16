@@ -180,27 +180,51 @@ async function renderPublic() {
             filterUI.id = 'projects-filter-ui';
             filterUI.className = 'projects-filters';
             filterUI.innerHTML = `
-                <div class="filter-group">
-                    <label>🎯 Filtrar por Etapa Anual</label>
-                    <select id="filter-stage-select" onchange="window.currentStageFilter=this.value; window.renderFilteredProjects(window.aesfactData.projects);">
-                        <option value="all">🌐 Ver Todas las Etapas</option>
-                        <option value="etapa_1">🔵 Etapa 1: Proyección Académica</option>
-                        <option value="etapa_2">🟢 Etapa 2: Compromiso Ambiental</option>
-                        <option value="etapa_3">🟡 Etapa 3: Responsabilidad Social</option>
-                        <option value="etapa_4">🔴 Etapa 4: Integración y Cierre</option>
-                    </select>
+                <div class="projects-filters-head">
+                    <div>
+                        <p class="projects-filters-kicker">Plan anual</p>
+                        <h3 class="projects-filters-title">Filtrar proyectos</h3>
+                    </div>
+                    <button type="button" class="projects-filters-reset" id="projects-filter-reset" hidden>Limpiar filtros</button>
                 </div>
-                <div class="filter-group">
-                    <label>🚦 Filtrar por Estado del Proyecto</label>
-                    <select id="filter-status-select" onchange="window.currentStatusFilter=this.value; window.renderFilteredProjects(window.aesfactData.projects);">
-                        <option value="all">⚡ Todos los Estados</option>
-                        <option value="En curso">⏳ Solo En Curso</option>
-                        <option value="Terminado">✅ Solo Terminados</option>
-                        <option value="Cancelado">❌ Solo Cancelados</option>
-                    </select>
+                <div class="projects-filters-body">
+                    <div class="filter-row">
+                        <span class="filter-row-label">Etapa</span>
+                        <div class="filter-chips" role="group" aria-label="Filtrar por etapa anual">
+                            <button type="button" class="filter-chip is-active" data-filter-type="stage" data-filter-value="all" aria-pressed="true">Todas</button>
+                            <button type="button" class="filter-chip filter-chip-stage" data-filter-type="stage" data-filter-value="etapa_1" data-stage="1" aria-pressed="false"><span class="filter-dot"></span>Formación</button>
+                            <button type="button" class="filter-chip filter-chip-stage" data-filter-type="stage" data-filter-value="etapa_2" data-stage="2" aria-pressed="false"><span class="filter-dot"></span>Ecología</button>
+                            <button type="button" class="filter-chip filter-chip-stage" data-filter-type="stage" data-filter-value="etapa_3" data-stage="3" aria-pressed="false"><span class="filter-dot"></span>Servicio</button>
+                            <button type="button" class="filter-chip filter-chip-stage" data-filter-type="stage" data-filter-value="etapa_4" data-stage="4" aria-pressed="false"><span class="filter-dot"></span>Integración</button>
+                        </div>
+                    </div>
+                    <div class="filter-row">
+                        <span class="filter-row-label">Estado</span>
+                        <div class="filter-chips" role="group" aria-label="Filtrar por estado del proyecto">
+                            <button type="button" class="filter-chip is-active" data-filter-type="status" data-filter-value="all" aria-pressed="true">Todos</button>
+                            <button type="button" class="filter-chip filter-chip-status" data-filter-type="status" data-filter-value="En curso" data-status="curso" aria-pressed="false">En curso</button>
+                            <button type="button" class="filter-chip filter-chip-status" data-filter-type="status" data-filter-value="Terminado" data-status="terminado" aria-pressed="false">Terminados</button>
+                            <button type="button" class="filter-chip filter-chip-status" data-filter-type="status" data-filter-value="Cancelado" data-status="cancelado" aria-pressed="false">Cancelados</button>
+                        </div>
+                    </div>
                 </div>
             `;
             pl.parentNode.insertBefore(filterUI, pl);
+
+            filterUI.addEventListener('click', (e) => {
+                const resetBtn = e.target.closest('#projects-filter-reset');
+                if (resetBtn) {
+                    window.currentStageFilter = 'all';
+                    window.currentStatusFilter = 'all';
+                    window.renderFilteredProjects(window.aesfactData.projects);
+                    return;
+                }
+                const chip = e.target.closest('[data-filter-type]');
+                if (!chip) return;
+                if (chip.dataset.filterType === 'stage') window.currentStageFilter = chip.dataset.filterValue;
+                if (chip.dataset.filterType === 'status') window.currentStatusFilter = chip.dataset.filterValue;
+                window.renderFilteredProjects(window.aesfactData.projects);
+            });
         }
 
         window.aesfactData = window.aesfactData || {};
@@ -216,8 +240,17 @@ async function renderPublic() {
                 { id: 'etapa_4', name: '🔴 ETAPA 4: INTEGRACIÓN Y CIERRE ANUAL', color: '#c62828' }
             ];
 
-            document.getElementById('filter-stage-select').value = window.currentStageFilter;
-            document.getElementById('filter-status-select').value = window.currentStatusFilter;
+            document.querySelectorAll('#projects-filter-ui [data-filter-type]').forEach((chip) => {
+                const isActive = chip.dataset.filterType === 'stage'
+                    ? chip.dataset.filterValue === window.currentStageFilter
+                    : chip.dataset.filterValue === window.currentStatusFilter;
+                chip.classList.toggle('is-active', isActive);
+                chip.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+            const resetBtn = document.getElementById('projects-filter-reset');
+            if (resetBtn) {
+                resetBtn.hidden = window.currentStageFilter === 'all' && window.currentStatusFilter === 'all';
+            }
 
             let etapasToRender = etapas;
             if (window.currentStageFilter !== 'all') {
