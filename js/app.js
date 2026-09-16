@@ -234,10 +234,10 @@ async function renderPublic() {
             pl.innerHTML = ''; 
             
             const etapas = [
-                { id: 'etapa_1', name: '🔵 ETAPA 1: PROYECCIÓN ACADÉMICA Y TECNOLÓGICA', color: '#0d5d9e' },
-                { id: 'etapa_2', name: '🟢 ETAPA 2: COMPROMISO AMBIENTAL', color: '#2e7d32' },
-                { id: 'etapa_3', name: '🟡 ETAPA 3: RESPONSABILIDAD SOCIAL Y HUMANITARIA', color: '#f57f17' },
-                { id: 'etapa_4', name: '🔴 ETAPA 4: INTEGRACIÓN Y CIERRE ANUAL', color: '#c62828' }
+                { id: 'etapa_1', kicker: 'Etapa 1', title: 'Proyección académica y tecnológica', color: '#0d5d9e' },
+                { id: 'etapa_2', kicker: 'Etapa 2', title: 'Compromiso ambiental', color: '#2e7d32' },
+                { id: 'etapa_3', kicker: 'Etapa 3', title: 'Responsabilidad social y humanitaria', color: '#f57f17' },
+                { id: 'etapa_4', kicker: 'Etapa 4', title: 'Integración y cierre anual', color: '#c62828' }
             ];
 
             document.querySelectorAll('#projects-filter-ui [data-filter-type]').forEach((chip) => {
@@ -274,20 +274,29 @@ async function renderPublic() {
                     proyectosToShow = proyectosEtapa.filter(p => p.status === window.currentStatusFilter);
                 }
 
+                const stageNum = (etapa.id || 'etapa_1').replace('etapa_', '').padStart(2, '0');
                 const stageContainer = document.createElement('div');
                 stageContainer.className = 'roadmap-stage';
-                stageContainer.style.borderLeft = `5px solid ${etapa.color}`;
+                stageContainer.style.setProperty('--stage-color', etapa.color);
 
                 stageContainer.innerHTML = `
                     <div class="roadmap-header">
-                        <h2 class="roadmap-title" style="color: ${etapa.color};">${etapa.name}</h2>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <span style="font-weight:bold; color:var(--muted); font-size:0.95rem;">Progreso de la fase</span>
-                            <span style="font-weight:bold; color:${etapa.color}; font-size:1.1rem;">${porcentaje}% <span style="font-size:0.85rem; color:var(--muted);">(${terminados}/${total} Proyectos completados)</span></span>
+                        <div class="roadmap-heading">
+                            <span class="roadmap-index">${stageNum}</span>
+                            <div>
+                                <p class="roadmap-kicker">${etapa.kicker}</p>
+                                <h2 class="roadmap-title">${etapa.title}</h2>
+                            </div>
                         </div>
-                        <div class="progress-container">
-                            <div class="progress-bar" style="width: ${porcentaje}%; background-color: ${etapa.color};">
-                                ${porcentaje > 5 ? porcentaje + '%' : ''}
+                        <div class="roadmap-progress">
+                            <div class="roadmap-progress-meta">
+                                <span>Progreso de la fase</span>
+                                <strong>${porcentaje}% <small>(${terminados}/${total} Proyectos completados)</small></strong>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: ${porcentaje}%;">
+                                    ${porcentaje > 5 ? porcentaje + '%' : ''}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -304,18 +313,20 @@ async function renderPublic() {
                     }
                 } else {
                     proyectosToShow.forEach((p, idx) => {
-                        const c = document.createElement('div'); c.className = 'project-card-wide';
+                        const c = document.createElement('div');
+                        const hasGallery = p.gallery && p.gallery.length > 0;
+                        c.className = 'project-card-wide' + (hasGallery ? ' has-gallery' : '');
                         let sc = 'curso'; if (p.status === 'Terminado') sc = 'terminado'; if (p.status === 'Cancelado') sc = 'cancelado';
                         
                         let galHtml = '';
-                        if (p.gallery && p.gallery.length > 0) {
+                        if (hasGallery) {
                             const sid = `ps-${etapa.id}-${idx}`; 
                             let slides = ''; p.gallery.forEach((g, i) => slides += `<div class="project-slide ${i === 0 ? 'active' : ''}" data-i="${i}"><img src="${g}" onclick="openPhotoViewer('${g}')"></div>`);
                             const ctrls = p.gallery.length > 1 ? `<button class="p-nav prev" onclick="moveSlide('${sid}',-1)">&#10094;</button><button class="p-nav next" onclick="moveSlide('${sid}',1)">&#10095;</button><div class="p-counter"><span id="${sid}-c">1</span>/${p.gallery.length}</div>` : '';
                             galHtml = `<div class="project-gallery-wrapper" id="${sid}">${slides}${ctrls}</div>`;
                         }
 
-                        let fbHtml = ''; if ((p.status === 'Terminado' || p.status === 'Cancelado') && p.feedback) fbHtml = `<div class="project-extra"><strong style="color:var(--blue-accent)">${p.status === 'Terminado' ? '🏁 Resultados / Conclusiones' : '⚠️ Motivo de cancelación'}</strong><p style="margin:5px 0 0 0;color:var(--muted)">${escapeHtml(p.feedback)}</p></div>`;
+                        let fbHtml = ''; if ((p.status === 'Terminado' || p.status === 'Cancelado') && p.feedback) fbHtml = `<div class="project-extra"><strong>${p.status === 'Terminado' ? 'Resultados / Conclusiones' : 'Motivo de cancelación'}</strong><p>${escapeHtml(p.feedback)}</p></div>`;
                         
                         let partHtml = '';
                         if (p.status === 'Terminado' && p.participants && p.participants.length > 0) {
@@ -333,10 +344,10 @@ async function renderPublic() {
                                 } else { isExt = true; role = "Externo / Voluntario"; }
                                 cardsHtml += `<div class="mini-member-card ${isExt ? 'external' : ''}"><img src="${photoUrl}" onclick="openPhotoViewer('${photoUrl}')" alt="${escapeHtml(part.name)}"><div class="mini-member-info"><h5>${escapeHtml(part.name)}</h5><p>${escapeHtml(role)}</p></div></div>`;
                             });
-                            partHtml = `<div style="margin-top:25px;"><div style="font-size:0.85rem; font-weight:700; color:var(--blue-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">👥 Equipo Participante</div><div class="project-participants-grid">${cardsHtml}</div></div>`;
+                            partHtml = `<div class="project-participants"><div class="project-section-label">Equipo participante</div><div class="project-participants-grid">${cardsHtml}</div></div>`;
                         }
 
-                        c.innerHTML = `<div class="project-header"><div><h3>${escapeHtml(p.title)}</h3><span class="project-date">📅 ${p.date || 'Pendiente'}</span></div><span class="status-badge ${sc}">${p.status}</span></div><div class="project-body">${galHtml}<div class="project-description">${escapeHtml(p.desc).replace(/\n/g, '<br>')}</div>${fbHtml}${partHtml}</div>`;
+                        c.innerHTML = `<div class="project-header"><div><h3>${escapeHtml(p.title)}</h3><span class="project-date">${p.date || 'Pendiente'}</span></div><span class="status-badge ${sc}">${p.status}</span></div><div class="project-body"><div class="project-main">${galHtml}<div class="project-copy"><div class="project-description">${escapeHtml(p.desc).replace(/\n/g, '<br>')}</div></div></div>${fbHtml}${partHtml}</div>`;
                         listContainer.appendChild(c);
                     });
                 }
